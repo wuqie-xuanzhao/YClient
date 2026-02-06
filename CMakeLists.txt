@@ -1979,7 +1979,7 @@ set(EXPECTED_DATA
   wordlist.txt
 )
 
-set_glob(DATA GLOB_RECURSE "cfg;chai;frag;json;map;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
+set_glob(DATA GLOB_RECURSE "cfg;chai;frag;json;map;otf;png;rules;ttc;ttf;txt;vert;wv" data "")
 
 ########################################################################
 # COPY DATA AND SHARED LIBS
