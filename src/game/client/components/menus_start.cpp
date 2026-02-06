@@ -178,12 +178,19 @@ void CMenusStart::RenderStartMenu(CUIRect MainView)
 	ConsoleButton.VSplitRight(40.0f, nullptr, &ConsoleButton);
 	Ui()->DoLabel(&CurVersion, GAME_RELEASE_VERSION, 14.0f, TEXTALIGN_MR);
 
-	CUIRect TClientVersion;
-	MainView.HSplitTop(15.0f, &TClientVersion, &MainView);
-	TClientVersion.VSplitRight(40.0f, &TClientVersion, nullptr);
-	char aTBuf[64];
-	str_format(aTBuf, sizeof(aTBuf), CLIENT_NAME " %s", CLIENT_RELEASE_VERSION);
-	Ui()->DoLabel(&TClientVersion, aTBuf, 14.0f, TEXTALIGN_MR);
+	// CUIRect TClientVersion;
+	// MainView.HSplitTop(15.0f, &TClientVersion, &MainView);
+	// TClientVersion.VSplitRight(40.0f, &TClientVersion, nullptr);
+	// char aTBuf[64];
+	// str_format(aTBuf, sizeof(aTBuf), CLIENT_NAME " %s", CLIENT_RELEASE_VERSION);
+	// Ui()->DoLabel(&TClientVersion, aTBuf, 14.0f, TEXTALIGN_MR);
+
+	// YClient 1.0 提示
+	CUIRect YClientHint;
+	MainView.HSplitTop(15.0f, &YClientHint, &MainView);
+	YClientHint.VSplitRight(40.0f, &YClientHint, nullptr);
+	Ui()->DoLabel(&YClientHint, "YClient 0.1", 14.0f, TEXTALIGN_MR);
+
 #if defined(CONF_AUTOUPDATE)
 	CUIRect UpdateToDateText;
 	MainView.HSplitTop(15.0f, &UpdateToDateText, nullptr);

@@ -1,10 +1,13 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* (c) Magnus Auviken. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "scoreboard.h"
+
+#include "scoreboard_client_points.h"
 
 #include <engine/console.h>
 #include <engine/demo.h>
 #include <engine/graphics.h>
+#include <engine/http.h>
 #include <engine/shared/config.h>
 #include <engine/textrender.h>
 
@@ -97,9 +100,14 @@ void CScoreboard::OnConsoleInit()
 	Console()->Register("toggle_scoreboard_cursor", "", CFGFLAG_CLIENT, ConToggleScoreboardCursor, this, "Toggle scoreboard cursor");
 }
 
+CScoreboard::~CScoreboard() = default;
+
 void CScoreboard::OnInit()
 {
 	m_DeadTeeTexture = Graphics()->LoadTexture("deadtee.png", IStorage::TYPE_ALL);
+
+	// 初始化客户端分数管理器
+	m_pClientPoints = std::make_unique<CScoreboardClientPoints>(Http());
 }
 
 void CScoreboard::OnReset()
@@ -107,6 +115,12 @@ void CScoreboard::OnReset()
 	m_Active = false;
 	m_MouseUnlocked = false;
 	m_LastMousePos = std::nullopt;
+
+	// 清除缓存的分数数据
+	if(m_pClientPoints)
+	{
+		m_pClientPoints->Clear();
+	}
 }
 
 void CScoreboard::OnRelease()
@@ -442,6 +456,25 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 
 	const bool UseTime = Race7 || TimeScore || MillisecondScore;
 
+	// 后台查询所有玩家的分数（提前加载，避免打开计分板时等待）
+	if(m_pClientPoints)
+	{
+		static const char *apPlayerNames[64]; // 最多 64 个玩家
+		int PlayerNameCount = 0;
+		for(int i = CountStart; i < CountEnd && PlayerNameCount < 64; i++)
+		{
+			const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apInfoByDDTeamScore[i];
+			if(pInfo && pInfo->m_Team != TEAM_SPECTATORS)
+			{
+				apPlayerNames[PlayerNameCount++] = GameClient()->m_aClients[pInfo->m_ClientId].m_aName;
+			}
+		}
+		if(PlayerNameCount > 0)
+		{
+			m_pClientPoints->QueryPlayersPoints((const char **)apPlayerNames, PlayerNameCount);
+		}
+	}
+
 	// calculate measurements
 	float LineHeight;
 	float TeeSizeMod;
@@ -510,13 +543,15 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	const float TeeOffset = ScoreOffset + ScoreLength + 20.0f;
 	const float TeeLength = 60.0f * TeeSizeMod;
 	const float NameOffset = TeeOffset + TeeLength;
-	const float NameLength = (LowScoreboardWidth ? 90.0f : 150.0f) - TeeLength;
+	const float NameLength = (LowScoreboardWidth ? 80.0f : 125.0f) - TeeLength;
 	const float CountryLength = (LineHeight - Spacing - TeeSizeMod * 5.0f) * 2.0f;
-	const float PingLength = 27.5f;
+	const float JsonScoreLength = 28.0f;
+	const float PingLength = 22.0f;
 	const float PingOffset = Scoreboard.x + Scoreboard.w - PingLength - 10.0f;
-	const float CountryOffset = PingOffset - CountryLength;
-	const float ClanOffset = NameOffset + NameLength + 2.5f;
-	const float ClanLength = CountryOffset - ClanOffset - 2.5f;
+	const float JsonScoreOffset = PingOffset - JsonScoreLength - 5.0f;
+	const float CountryOffset = JsonScoreOffset - CountryLength - 5.0f;
+	const float ClanOffset = NameOffset + NameLength + 2.0f;
+	const float ClanLength = CountryOffset - ClanOffset - 2.0f;
 
 	// render headlines
 	const float HeadlineFontsize = 11.0f;
@@ -528,6 +563,8 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	TextRender()->Text(NameOffset, HeadlineY, HeadlineFontsize, Localize("Name"));
 	const char *pClanLabel = Localize("Clan");
 	TextRender()->Text(ClanOffset + (ClanLength - TextRender()->TextWidth(HeadlineFontsize, pClanLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pClanLabel);
+	const char *pJsonScoreLabel = Localize("Points");
+	TextRender()->Text(JsonScoreOffset + (JsonScoreLength - TextRender()->TextWidth(HeadlineFontsize, pJsonScoreLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pJsonScoreLabel);
 	const char *pPingLabel = Localize("Ping");
 	TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(HeadlineFontsize, pPingLabel), HeadlineY, HeadlineFontsize, pPingLabel);
 
@@ -782,21 +819,42 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					TextRender()->TextColor(TextColor);
 				}
 
+				float CurrentClanWidth = TextRender()->TextWidth(FontSize, ClientData.m_aClan);
+				float RenderFontSize = FontSize;
+
+				// --- 动态缩放逻辑开始 ---
+				// 如果战队名宽度超过了分配的 ClanLength，就计算缩放比例
+				if(CurrentClanWidth > ClanLength && ClanLength > 1.0f)
+				{
+					RenderFontSize *= (ClanLength / CurrentClanWidth);
+				}
+
 				// TClient
 				if(pInfo->m_ClientId >= 0 && g_Config.m_TcWarList && g_Config.m_TcWarListScoreboard && GameClient()->m_WarList.GetAnyWar(pInfo->m_ClientId))
 					TextRender()->TextColor(GameClient()->m_WarList.GetClanColor(pInfo->m_ClientId));
 
 				CTextCursor Cursor;
-				Cursor.SetPosition(vec2(ClanOffset + (ClanLength - minimum(TextRender()->TextWidth(FontSize, ClientData.m_aClan), ClanLength)) / 2.0f, Row.y + (Row.h - FontSize) / 2.0f));
-				Cursor.m_FontSize = FontSize;
+				Cursor.SetPosition(vec2(ClanOffset + (ClanLength - minimum(CurrentClanWidth, ClanLength)) / 2.0f, Row.y + (Row.h - RenderFontSize) / 2.0f));
+				Cursor.m_FontSize = RenderFontSize; // 使用动态计算出的字号
 				Cursor.m_Flags |= TEXTFLAG_ELLIPSIS_AT_END;
-				Cursor.m_LineWidth = ClanLength;
+				Cursor.m_LineWidth = ClanLength + 1.0f;
 				TextRender()->TextEx(&Cursor, ClientData.m_aClan);
 			}
 
 			// country flag
 			GameClient()->m_CountryFlags.Render(ClientData.m_Country, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f),
 				CountryOffset, Row.y + (Spacing + TeeSizeMod * 5.0f) / 2.0f, CountryLength, Row.h - Spacing - TeeSizeMod * 5.0f);
+
+			// json score (online points from server)
+			TextRender()->TextColor(TextColor);
+			int JsonScore = 0;
+			if(m_pClientPoints)
+			{
+				JsonScore = m_pClientPoints->GetPointsForPlayer(ClientData.m_aName);
+			}
+			// 显示所有分数（包括 0 分）
+			str_format(aBuf, sizeof(aBuf), "%d", JsonScore);
+			TextRender()->Text(JsonScoreOffset + JsonScoreLength - TextRender()->TextWidth(FontSize, aBuf), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aBuf);
 
 			// ping
 			if(g_Config.m_ClEnablePingColor)

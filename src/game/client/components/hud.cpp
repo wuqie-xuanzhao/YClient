@@ -1599,6 +1599,11 @@ inline float CHud::GetMovementInformationBoxHeight()
 	{
 		BoxHeight += 2.0f;
 	}
+
+	// 为分身状态、控制和游戏模式显示增加高度
+	if(Client()->DummyConnected())
+		BoxHeight += 6.0f * MOVEMENT_INFORMATION_LINE_HEIGHT;
+
 	return BoxHeight;
 }
 
@@ -1657,11 +1662,12 @@ CHud::CMovementInformation CHud::GetMovementInformation(int ClientId, int Conn) 
 		{
 			VelspeedY = 0.0f;
 		}
-		// We show the speed in Blocks per Second (Bps) and therefore have to divide by the block size
+		// 我们以每秒方格数 (Blocks per Second, Bps) 为单位显示速度，因此必须除以方格的大小（32像素）
 		Out.m_Speed.x = VelspeedX / 32.0f;
 		float VelspeedLength = length(vec2(Vel.x, Vel.y) / 256.0f) * Client()->GameTickSpeed();
 		// Todo: Use Velramp tuning of each individual player
-		// Since these tuning parameters are almost never changed, the default values are sufficient in most cases
+		// 待办事项：对每个玩家使用对应的 Velramp（速度爬坡）调整参数
+		// 由于这些调整参数几乎从不更改，在大多数情况下使用默认值就足够了
 		float Ramp = VelocityRamp(VelspeedLength, GameClient()->m_aTuning[Conn].m_VelrampStart, GameClient()->m_aTuning[Conn].m_VelrampRange, GameClient()->m_aTuning[Conn].m_VelrampCurvature);
 		Out.m_Speed.x *= Ramp;
 		Out.m_Speed.y = VelspeedY / 32.0f;
@@ -1857,6 +1863,88 @@ void CHud::RenderMovementInformation()
 			str_format(aBuf, sizeof(aBuf), "%.2f", DummyInfo.m_Angle);
 			TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, aBuf), y, Fontsize, aBuf, -1.0f);
 		}
+	}
+
+	// 分身连接后，显示卡键状态
+	if(Client()->DummyConnected())
+	{
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+		TextRender()->Text(LeftX, y, Fontsize, Localize("分身状态:"), -1.0f);
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+		const char *pStatusText = "";
+		ColorRGBA StatusColor = TextRender()->DefaultTextColor();
+
+		switch(g_Config.m_ClDummyResetOnSwitch)
+		{
+		case 0:
+			pStatusText = "卡键: 开";
+			StatusColor = ColorRGBA(0.647f, 1.0f, 0.647f, 1.0f); // 绿色
+			break;
+		case 1:
+			pStatusText = "卡键: 关";
+			StatusColor = ColorRGBA(1.0f, 0.5f, 0.5f, 1.0f); // 红色
+			break;
+		case 2:
+			pStatusText = "卡键: 关(玩家模式)";
+			StatusColor = ColorRGBA(1.0f, 0.8f, 0.4f, 1.0f); // 橙色（玩家模式）
+			break;
+		}
+
+		TextRender()->TextColor(StatusColor);
+		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pStatusText), y, Fontsize, pStatusText, -1.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// 显示分身控制状态
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+		const char *pControlText = "";
+		ColorRGBA ControlColor = TextRender()->DefaultTextColor();
+
+		switch(g_Config.m_ClDummyControl)
+		{
+		case 0:
+			pControlText = "分身控制: 关";
+			ControlColor = ColorRGBA(1.0f, 0.5f, 0.5f, 1.0f); // 红色
+			break;
+		case 1:
+			pControlText = "分身控制: 开";
+			ControlColor = ColorRGBA(0.647f, 1.0f, 0.647f, 1.0f); // 绿色
+			break;
+		}
+
+		TextRender()->TextColor(ControlColor);
+		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pControlText), y, Fontsize, pControlText, -1.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// 显示飞行模式
+		y += MOVEMENT_INFORMATION_LINE_HEIGHT;
+
+		const char *pModeText = "";
+		ColorRGBA ModeColor = TextRender()->DefaultTextColor();
+
+		switch(g_Config.m_ClGameMode)
+		{
+		case 0:
+			pModeText = "飞行模式: DF";
+			ModeColor = ColorRGBA(1.0f, 0.8f, 0.4f, 1.0f); // 橙色
+			break;
+		case 1:
+			pModeText = "飞行模式: HDF";
+			ModeColor = ColorRGBA(0.647f, 1.0f, 0.647f, 1.0f); // 绿色
+			break;
+		case 2:
+			pModeText = "飞行模式: PF";
+			ModeColor = ColorRGBA(0.4f, 0.8f, 1.0f, 1.0f); // 蓝色
+			break;
+		case 3:
+			pModeText = "飞行模式: Normal";
+			ModeColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f); // 白色
+			break;
+		}
+
+		TextRender()->TextColor(ModeColor);
+		TextRender()->Text(RightX - TextRender()->TextWidth(Fontsize, pModeText), y, Fontsize, pModeText, -1.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
 

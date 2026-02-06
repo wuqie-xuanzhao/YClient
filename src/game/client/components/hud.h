@@ -9,6 +9,8 @@
 #include <generated/protocol.h>
 
 #include <game/client/component.h>
+#include <game/client/ui.h>
+#include <game/client/ui_rect.h>
 
 struct SScoreInfo
 {
@@ -115,6 +117,7 @@ public:
 	void OnWindowResize() override;
 	void OnReset() override;
 	void OnRender() override;
+	void RenderDummyLockStatus();
 	void OnInit() override;
 	void OnNewSnapshot() override;
 

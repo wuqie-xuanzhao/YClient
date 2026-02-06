@@ -10,6 +10,10 @@
 #include <game/client/ui.h>
 #include <game/client/ui_rect.h>
 
+#include <memory>
+
+class CScoreboardClientPoints;
+
 class CScoreboard : public CComponent
 {
 	struct CScoreboardRenderState
@@ -81,8 +85,11 @@ class CScoreboard : public CComponent
 	};
 	CPlayerElement m_aPlayers[MAX_CLIENTS];
 
+	std::unique_ptr<CScoreboardClientPoints> m_pClientPoints;
+
 public:
 	CScoreboard();
+	~CScoreboard();
 	int Sizeof() const override { return sizeof(*this); }
 	void OnConsoleInit() override;
 	void OnInit() override;
