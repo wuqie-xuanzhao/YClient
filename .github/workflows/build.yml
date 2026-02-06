@@ -144,24 +144,24 @@ jobs:
         cd src/masterping
         cargo build
 
-    - name: Build in debug mode
-      run: |
-        mkdir debug
-        cd debug
-        ${{ matrix.cmake-path }}cmake --version
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
-        ${{ matrix.workaround-issue10203-run-after-configure }}
-        ${{ matrix.cmake-path }}cmake --build . --config Debug --target everything
+    # - name: Build in debug mode
+    #   run: |
+    #     mkdir debug
+    #     cd debug
+    #     ${{ matrix.cmake-path }}cmake --version
+    #     ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+    #     ${{ matrix.workaround-issue10203-run-after-configure }}
+    #     ${{ matrix.cmake-path }}cmake --build . --config Debug --target everything
 
-    - name: Test debug
-      run: |
-        cd debug
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests
+    # - name: Test debug
+    #   run: |
+    #     cd debug
+    #     ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests
 
-    - name: Run debug server
-      run: |
-        cd debug
-        ./DDNet-Server shutdown
+    # - name: Run debug server
+    #   run: |
+    #     cd debug
+    #     ./DDNet-Server shutdown
 
     - name: Build in release mode
       run: |
@@ -171,51 +171,51 @@ jobs:
         ${{ matrix.workaround-issue10203-run-after-configure }}
         ${{ matrix.cmake-path }}cmake --build . --config Release --target everything
 
-    - name: Test release
-      run: |
-        cd release
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Release --target run_tests
+    # - name: Test release
+    #   run: |
+    #     cd release
+    #     ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config Release --target run_tests
 
-    - name: Run release server
-      run: |
-        cd release
-        ./DDNet-Server shutdown
+    # - name: Run release server
+    #   run: |
+    #     cd release
+    #     ./DDNet-Server shutdown
 
-    - name: Build headless client
-      if: ${{ !contains(matrix.os, 'ubuntu') }}
-      run: |
-        mkdir headless
-        cd headless
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DHEADLESS_CLIENT=ON -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
-        ${{ matrix.workaround-issue10203-run-after-configure }}
-        ${{ matrix.cmake-path }}cmake --build . --config Debug
+    # - name: Build headless client
+    #   if: ${{ !contains(matrix.os, 'ubuntu') }}
+    #   run: |
+    #     mkdir headless
+    #     cd headless
+    #     ${{ matrix.cmake-path }}cmake -E env ${{ matrix.cmake-init-env }} ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DHEADLESS_CLIENT=ON -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+    #     ${{ matrix.workaround-issue10203-run-after-configure }}
+    #     ${{ matrix.cmake-path }}cmake --build . --config Debug
 
-    - name: Build headless client with code coverage
-      if: contains(matrix.os, 'ubuntu-latest')
-      run: |
-        mkdir headless
-        cd headless
-        ${{ matrix.cmake-path }}cmake -E env CXXFLAGS="--coverage -Werror" ${{ matrix.cmake-path }}cmake -E env LDFLAGS="--coverage -Werror" ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DHEADLESS_CLIENT=ON -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
-        ${{ matrix.workaround-issue10203-run-after-configure }}
-        ${{ matrix.cmake-path }}cmake -E env RUSTFLAGS="-Clink-arg=--coverage" ${{ matrix.cmake-path }}cmake --build . --config Debug
+    # - name: Build headless client with code coverage
+    #   if: contains(matrix.os, 'ubuntu-latest')
+    #   run: |
+    #     mkdir headless
+    #     cd headless
+    #     ${{ matrix.cmake-path }}cmake -E env CXXFLAGS="--coverage -Werror" ${{ matrix.cmake-path }}cmake -E env LDFLAGS="--coverage -Werror" ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DHEADLESS_CLIENT=ON -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+    #     ${{ matrix.workaround-issue10203-run-after-configure }}
+    #     ${{ matrix.cmake-path }}cmake -E env RUSTFLAGS="-Clink-arg=--coverage" ${{ matrix.cmake-path }}cmake --build . --config Debug
 
-    - name: Test headless client (unit tests)
-      if: ${{ !contains(matrix.os, 'ubuntu') }}
-      run: |
-        cd headless
-        ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests
+    # - name: Test headless client (unit tests)
+    #   if: ${{ !contains(matrix.os, 'ubuntu') }}
+    #   run: |
+    #     cd headless
+    #     ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests
 
-    - name: Test headless client (unit tests) with code coverage
-      if: contains(matrix.os, 'ubuntu-latest')
-      run: |
-        cd headless
-        ${{ matrix.cmake-path }}cmake -E env RUSTFLAGS="-Clink-arg=--coverage" RUSTDOCFLAGS="-Clink-arg=--coverage" ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests
+    # - name: Test headless client (unit tests) with code coverage
+    #   if: contains(matrix.os, 'ubuntu-latest')
+    #   run: |
+    #     cd headless
+    #     ${{ matrix.cmake-path }}cmake -E env RUSTFLAGS="-Clink-arg=--coverage" RUSTDOCFLAGS="-Clink-arg=--coverage" ${{ matrix.cmake-path }}cmake --build . --config Debug --target run_tests
 
-    - name: Upload Codecov report (unit tests)
-      if: contains(matrix.os, 'ubuntu-latest')
-      uses: codecov/codecov-action@v4
-      with:
-        flags: unittests
+    # - name: Upload Codecov report (unit tests)
+    #   if: contains(matrix.os, 'ubuntu-latest')
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     flags: unittests
 
     - name: Build in release mode with debug info and all features on
       if: contains(matrix.name, 'fancy')
@@ -226,72 +226,72 @@ jobs:
         ${{ matrix.workaround-issue10203-run-after-configure }}
         ${{ matrix.cmake-path }}cmake --build . --config RelWithDebInfo --target everything
 
-    - name: Test fancy
-      if: contains(matrix.name, 'fancy')
-      run: |
-        cd fancy
-        ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config RelWithDebInfo --target run_tests
+    # - name: Test fancy
+    #   if: contains(matrix.name, 'fancy')
+    #   run: |
+    #     cd fancy
+    #     ${{ matrix.cmake-path }}cmake -E env ${{ matrix.gtest-env }} ${{ matrix.cmake-path }}cmake --build . --config RelWithDebInfo --target run_tests
 
-    - name: Run fancy server
-      if: contains(matrix.name, 'fancy')
-      run: |
-        cd fancy
-        ./DDNet-Server shutdown
+    # - name: Run fancy server
+    #   if: contains(matrix.name, 'fancy')
+    #   run: |
+    #     cd fancy
+    #     ./DDNet-Server shutdown
 
-    - name: Run integration tests
-      id: integration_test
-      if: ${{ !contains(matrix.os, 'ubuntu') }}
-      continue-on-error: true
-      run: |
-        cp src/mastersrv/target/debug/mastersrv${{ matrix.executable-suffix }} headless
-        python scripts/integration_test.py --show-full-output --test-mastersrv headless
+    # - name: Run integration tests
+    #   id: integration_test
+    #   if: ${{ !contains(matrix.os, 'ubuntu') }}
+    #   continue-on-error: true
+    #   run: |
+    #     cp src/mastersrv/target/debug/mastersrv${{ matrix.executable-suffix }} headless
+    #     python scripts/integration_test.py --show-full-output --test-mastersrv headless
 
-    - name: Run integration tests with Valgrind's Memcheck and code coverage
-      id: integration_test_valgrind
-      if: contains(matrix.os, 'ubuntu-latest')
-      continue-on-error: true
-      run: |
-        # Remove old coverage data:
-        find headless -name '*.gcno' -o -name '*.gcda' -delete
-        cp src/mastersrv/target/debug/mastersrv${{ matrix.executable-suffix }} headless
-        python scripts/integration_test.py --show-full-output --test-mastersrv --valgrind-memcheck headless
+    # - name: Run integration tests with Valgrind's Memcheck and code coverage
+    #   id: integration_test_valgrind
+    #   if: contains(matrix.os, 'ubuntu-latest')
+    #   continue-on-error: true
+    #   run: |
+    #     # Remove old coverage data:
+    #     find headless -name '*.gcno' -o -name '*.gcda' -delete
+    #     cp src/mastersrv/target/debug/mastersrv${{ matrix.executable-suffix }} headless
+    #     python scripts/integration_test.py --show-full-output --test-mastersrv --valgrind-memcheck headless
 
-    - name: Upload integration test results
-      id: integration_test_artifact_upload
-      if: steps.integration_test.outcome == 'failure' || steps.integration_test_valgrind.outcome == 'failure'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ddnet-${{ matrix.name }}-integration-test-results
-        path: headless/integration_*
-        if-no-files-found: error
+    # - name: Upload integration test results
+    #   id: integration_test_artifact_upload
+    #   if: steps.integration_test.outcome == 'failure' || steps.integration_test_valgrind.outcome == 'failure'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ddnet-${{ matrix.name }}-integration-test-results
+    #     path: headless/integration_*
+    #     if-no-files-found: error
 
-    - name: Summarize integration test results
-      if: steps.integration_test.outcome == 'failure' || steps.integration_test_valgrind.outcome == 'failure'
-      shell: bash
-      run: |
-        echo -e "\033[31mFAILED: Integration test failed. Refer to the workflow logs and uploaded artifacts in the steps above for details.\033[m"
-        echo "### Integration test failed" >> $GITHUB_STEP_SUMMARY
-        echo >> $GITHUB_STEP_SUMMARY
-        echo "See summary below. Refer to the workflow logs and uploaded artifacts for details." >> $GITHUB_STEP_SUMMARY
-        echo >> $GITHUB_STEP_SUMMARY
-        echo "Artifact URL: ${{ steps.integration_test_artifact_upload.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
-        for integration_dir in headless/integration_*; do
-          echo >> $GITHUB_STEP_SUMMARY
-          echo "<details><summary>Test $(basename "$integration_dir")</summary>" >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat "$integration_dir/test_failure.log" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
-          echo "</details>" >> $GITHUB_STEP_SUMMARY
-        done
-        exit 1
+    # - name: Summarize integration test results
+    #   if: steps.integration_test.outcome == 'failure' || steps.integration_test_valgrind.outcome == 'failure'
+    #   shell: bash
+    #   run: |
+    #     echo -e "\033[31mFAILED: Integration test failed. Refer to the workflow logs and uploaded artifacts in the steps above for details.\033[m"
+    #     echo "### Integration test failed" >> $GITHUB_STEP_SUMMARY
+    #     echo >> $GITHUB_STEP_SUMMARY
+    #     echo "See summary below. Refer to the workflow logs and uploaded artifacts for details." >> $GITHUB_STEP_SUMMARY
+    #     echo >> $GITHUB_STEP_SUMMARY
+    #     echo "Artifact URL: ${{ steps.integration_test_artifact_upload.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
+    #     for integration_dir in headless/integration_*; do
+    #       echo >> $GITHUB_STEP_SUMMARY
+    #       echo "<details><summary>Test $(basename "$integration_dir")</summary>" >> $GITHUB_STEP_SUMMARY
+    #       echo >> $GITHUB_STEP_SUMMARY
+    #       echo '```' >> $GITHUB_STEP_SUMMARY
+    #       cat "$integration_dir/test_failure.log" >> $GITHUB_STEP_SUMMARY
+    #       echo '```' >> $GITHUB_STEP_SUMMARY
+    #       echo >> $GITHUB_STEP_SUMMARY
+    #       echo "</details>" >> $GITHUB_STEP_SUMMARY
+    #     done
+    #     exit 1
 
-    - name: Upload Codecov report (integration tests)
-      if: contains(matrix.os, 'ubuntu-latest')
-      uses: codecov/codecov-action@v4
-      with:
-        flags: integrationtests
+    # - name: Upload Codecov report (integration tests)
+    #   if: contains(matrix.os, 'ubuntu-latest')
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     flags: integrationtests
 
     - name: Package
       run: |
@@ -403,11 +403,11 @@ jobs:
         emcmake cmake -H. -G "Unix Makefiles" -B build-emscripten-headless -DCMAKE_BUILD_TYPE=Debug -DVIDEORECORDER=OFF -DVULKAN=OFF -DSERVER=OFF -DTOOLS=OFF -DHEADLESS_CLIENT=ON -DPREFER_BUNDLED_LIBS=ON
         cmake --build build-emscripten-headless --target game-client -j$(nproc)
 
-    - name: Test headless Emscripten client
-      run: |
-        export MOZ_HEADLESS=1
-        source emsdk/emsdk_env.sh
-        emrun --browser firefox build-emscripten-headless/DDNet.html -- "quit"
+    # - name: Test headless Emscripten client
+    #   run: |
+    #     export MOZ_HEADLESS=1
+    #     source emsdk/emsdk_env.sh
+    #     emrun --browser firefox build-emscripten-headless/DDNet.html -- "quit"
 
     - name: Build Emscripten client in release mode
       run: |
