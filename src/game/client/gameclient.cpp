@@ -2659,8 +2659,12 @@ void CGameClient::OnPredict()
 		CNetObj_PlayerInput *pDummyInputData = !pDummyChar ? nullptr : (CNetObj_PlayerInput *)Client()->GetInput(Tick, m_IsDummySwapping ^ 1);
 		bool DummyFirst = pInputData && pDummyInputData && pDummyChar->GetCid() < pLocalChar->GetCid();
 
-		if(g_Config.m_TcFastInput && Tick == FinalTickSelf)
+		if(g_Config.m_TcFastInput && Tick > FinalTickRegular)
+		{
 			pInputData = &m_Controls.m_FastInput;
+			if(g_Config.m_ClDummyCopyMoves)
+				pDummyInputData = &m_Controls.m_FastInput;
+		}
 
 		if(DummyFirst)
 			pDummyChar->OnDirectInput(pDummyInputData);
