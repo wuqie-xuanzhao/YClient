@@ -11,6 +11,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/updater.h>
+#include <engine/font_icons.h>
 
 #include <game/client/animstate.h>
 #include <game/client/components/binds.h>
@@ -1454,7 +1455,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView)
 
 			if(IsClan)
 			{
-				RenderFontIcon(EntryTypeRect, FONT_ICON_USERS, 18.0f, TEXTALIGN_MC);
+				RenderFontIcon(EntryTypeRect, FontIcon::ICON_USERS, 18.0f, TEXTALIGN_MC);
 			}
 			else
 			{
