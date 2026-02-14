@@ -932,6 +932,8 @@ public:
 
 	vec2 GetSmoothPos(int ClientId);
 	vec2 GetFreezePos(int ClientId);
+	vec2 GetFastInputPos(int ClientId);
+
 	int m_MultiViewTeam;
 	float m_MultiViewPersonalZoom;
 	bool m_MultiViewShowHud;
@@ -1011,8 +1013,8 @@ private:
 
 public:
 	// TClient
-	int m_SmoothTick[2] = {};
-	float m_SmoothIntraTick[2] = {};
+	int m_SmoothTick = 0;
+	float m_SmoothIntraTick = 0;
 	bool CheckNewInput() override;
 	std::optional<CServerInfo> m_ConnectServerInfo = std::nullopt;
 	void SetConnectInfo(const NETADDR *pAddress) override;
