@@ -88,7 +88,7 @@ const char *CExplanations::ExplainDDNet(int Tile, int Layer)
 		break;
 	case TILE_NOHOOK:
 		if(Layer == LAYER_GAME)
-			return "UNHOOKABLE: It's not possible to hook it, but can collide with it.";
+			return "UNHOOKABLE: 不能钩，但是可以交互的墙";
 		break;
 	case TILE_NOLASER:
 		if(Layer == LAYER_GAME || Layer == LAYER_FRONT)

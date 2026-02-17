@@ -2219,7 +2219,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 		{
 			char aLineBuilder[128];
 
-			str_format(aLineBuilder, sizeof(aLineBuilder), "'%s' entered and joined the game", aBuf);
+			str_format(aLineBuilder, sizeof(aLineBuilder), "'%s' 进入了游戏", aBuf);
 			SetPreviewLine(PREVIEW_SYS, -1, "*** ", aLineBuilder, 0, 0);
 
 			str_format(aLineBuilder, sizeof(aLineBuilder), "Hey, how are you %s?", aBuf);

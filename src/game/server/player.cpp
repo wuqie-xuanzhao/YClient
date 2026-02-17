@@ -216,7 +216,7 @@ void CPlayer::Tick()
 		SetInitialAfk(true);
 
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "'%s' would have timed out, but can use timeout protection now", Server()->ClientName(m_ClientId));
+		str_format(aBuf, sizeof(aBuf), "'%s' 可能超时了，但是现在可以使用超时保护重连", Server()->ClientName(m_ClientId));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 		Server()->ResetNetErrorString(m_ClientId);
 	}
@@ -836,7 +836,7 @@ int CPlayer::Pause(int State, bool Force)
 			{
 				if(!Force && m_LastPause && m_LastPause + (int64_t)g_Config.m_SvSpecFrequency * Server()->TickSpeed() > Server()->Tick())
 				{
-					GameServer()->SendChatTarget(m_ClientId, "Can't /spec that quickly.");
+					GameServer()->SendChatTarget(m_ClientId, "不能使用 /spec 那么快。");
 					return m_Paused; // Do not update state. Do not collect $200
 				}
 				m_pCharacter->Pause(false);
