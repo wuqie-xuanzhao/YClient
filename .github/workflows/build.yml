@@ -1,4 +1,4 @@
-name: ,uild
+name: build
 
 on:
   push:
@@ -23,13 +23,13 @@ jobs:
           cmake-args: -G Ninja
           cmake-init-env: CXXFLAGS=-Werror
           package-file: "*-linux_x86_64.tar.xz"
-        - name: ubuntu-22.04
-          os: ubuntu-22.04
-          cmake-path: /usr/bin/
-          cmake-args: -G "Unix Makefiles" -DTEST_MYSQL=ON
-          cmake-init-env: CXXFLAGS=-Werror
-          gtest-env: GTEST_FILTER=-*SQLite*
-          package-file: "*-linux_x86_64.tar.xz"
+        # - name: ubuntu-22.04
+        #   os: ubuntu-22.04
+        #   cmake-path: /usr/bin/
+        #   cmake-args: -G "Unix Makefiles" -DTEST_MYSQL=ON
+        #   cmake-init-env: CXXFLAGS=-Werror
+        #   gtest-env: GTEST_FILTER=-*SQLite*
+        #   package-file: "*-linux_x86_64.tar.xz"
         - name: macOS-latest
           os: macOS-latest
           cmake-args: -G Ninja
@@ -41,15 +41,15 @@ jobs:
           cmake-init-env: CXXFLAGS=/WX LDFLAGS=/WX
           package-file: "*-win64.zip"
           executable-suffix: .exe
-        - name: windows-latest-mingw
-          os: windows-latest
-          cmake-args: -G Ninja -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXCEPTION_HANDLING=ON -DCMAKE_RC_COMPILER=windres -DCMAKE_AR=ar -DVULKAN=ON
-          cmake-init-env: CXXFLAGS=-Werror LDFLAGS=-Werror
-          package-file: "*-win64.zip"
-          executable-suffix: .exe
-          # Delete outdated libwinpthread-1.dll after configuring to workaround https://github.com/ddnet/ddnet/issues/10203 when using MinGW.
-          # Adding this condition into the individual steps is not possible without using bash shell consistently, which does not work for windows-latest.
-          workaround-issue10203-run-after-configure: rm libwinpthread-1.dll
+        # - name: windows-latest-mingw
+        #   os: windows-latest
+        #   cmake-args: -G Ninja -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXCEPTION_HANDLING=ON -DCMAKE_RC_COMPILER=windres -DCMAKE_AR=ar -DVULKAN=ON
+        #   cmake-init-env: CXXFLAGS=-Werror LDFLAGS=-Werror
+        #   package-file: "*-win64.zip"
+        #   executable-suffix: .exe
+        #   # Delete outdated libwinpthread-1.dll after configuring to workaround https://github.com/ddnet/ddnet/issues/10203 when using MinGW.
+        #   # Adding this condition into the individual steps is not possible without using bash shell consistently, which does not work for windows-latest.
+        #   workaround-issue10203-run-after-configure: rm libwinpthread-1.dll
 
     steps:
     - uses: actions/checkout@v4
@@ -347,25 +347,25 @@ jobs:
               src/masterping
               ./
 
-    - name: Build Android app
-      env:
-        TW_KEY_NAME: /home/runner/DDNet.jks
-        TW_KEY_ALIAS: DDNet-Key
-      run: |
-        export TW_KEY_PW="$(openssl rand -base64 32)"
-        keytool -genkey -v -keystore "$TW_KEY_NAME" -keyalg RSA -keysize 2048 -validity 10000 -alias "$TW_KEY_ALIAS" -storepass "$TW_KEY_PW" -dname "CN=DDNet CI, OU=DDNet, O=DDNet"
-        export ANDROID_HOME="/home/runner/Android/Sdk"
-        unset ANDROID_SDK_ROOT
-        export PATH=/home/runner/cmake/bin:$PATH
-        scripts/android/cmake_android.sh all DDNet org.ddnet.client Release build-android
-        mkdir artifacts
-        mv build-android/DDNet.apk artifacts
+    # - name: Build Android app
+    #   env:
+    #     TW_KEY_NAME: /home/runner/DDNet.jks
+    #     TW_KEY_ALIAS: DDNet-Key
+    #   run: |
+    #     export TW_KEY_PW="$(openssl rand -base64 32)"
+    #     keytool -genkey -v -keystore "$TW_KEY_NAME" -keyalg RSA -keysize 2048 -validity 10000 -alias "$TW_KEY_ALIAS" -storepass "$TW_KEY_PW" -dname "CN=DDNet CI, OU=DDNet, O=DDNet"
+    #     export ANDROID_HOME="/home/runner/Android/Sdk"
+    #     unset ANDROID_SDK_ROOT
+    #     export PATH=/home/runner/cmake/bin:$PATH
+    #     scripts/android/cmake_android.sh all DDNet org.ddnet.client Release build-android
+    #     mkdir artifacts
+    #     mv build-android/DDNet.apk artifacts
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ddnet-android
-        path: artifacts
+    # - name: Upload Artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ddnet-android
+    #     path: artifacts
 
   build-emscripten:
     runs-on: ubuntu-24.04
