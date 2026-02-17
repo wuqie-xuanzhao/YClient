@@ -26,8 +26,9 @@ jobs:
           package-file: "*-linux_x86_64.tar.xz"
         - name: macOS-latest
           os: macOS-latest
-          cmake-args: -G Ninja
-          cmake-init-env: ""
+          # 增加 -D CMAKE_FIND_FRAMEWORK=LAST 确保优先找 Homebrew 而不是系统冲突路径
+          cmake-args: -G Ninja -DCMAKE_FIND_FRAMEWORK=LAST -DCMAKE_OSX_SYSROOT=macosx
+          cmake-init-env: "" 
           package-file: "*-macos.dmg"
         - name: windows-latest
           os: windows-latest
@@ -85,13 +86,24 @@ jobs:
         cd ../masterping && cargo build --release
 
     # 普通 Release 编译 (只在 Windows 和 macOS 上运行，Linux 直接跑下面的 Fancy 版)
-    - name: Build in release mode
+    - name: Build in release mode 
       if: "!contains(matrix.name, 'fancy')"
+      shell: bash
       run: |
+        # 强制清空环境变量，防止 Clang 被 GitHub 默认环境误导
+        export CPATH=""
+        export C_INCLUDE_PATH=""
+        export CPLUS_INCLUDE_PATH=""
+        
         mkdir release && cd release
-        cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+        # 注意这里：显式指定 SDK 路径为 macosx
+        cmake ${{ matrix.cmake-args }} \
+          -DCMAKE_BUILD_TYPE=Release \
+          -Werror=dev \
+          -DDOWNLOAD_GTEST=ON \
+          -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
         cmake --build . --config Release --target everything
-
+        
     # 豪华版编译 (只在 Linux 上跑，开启所有功能)
     - name: Build in release mode (Fancy)
       if: contains(matrix.name, 'fancy')
