@@ -102,7 +102,7 @@ jobs:
         export C_INCLUDE_PATH=""
         export CPLUS_INCLUDE_PATH=""
         
-        mkdir release && cd release
+        mkdir -p release && cd release
         
         # 2. 运行 CMake 配置
         cmake ${{ matrix.cmake-args }} \
@@ -111,14 +111,16 @@ jobs:
           -DDOWNLOAD_GTEST=ON \
           -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
 
-        # 3. 物理切除：从所有生成的 Ninja 和编译配置文件中删掉错误的 isystem 路径
-        # 这个路径是导致 <cstdint> 报错的罪魁祸首
-        echo "Applying physical path fix..."
-        find . -name "*.ninja" -o -name "flags.make" | xargs sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
+        # 3. 物理切除：只在 macOS 上运行，并适配正确的 sed 语法
+        # 使用 runner.os 来判断，避免 Windows 跑这个命令报错
+        if [ "${{ runner.os }}" = "macOS" ]; then
+          echo "Applying physical path fix for macOS..."
+          # macOS 的 sed 需要 -i ''，物理删除干扰 libc++ 的系统路径
+          find . -name "*.ninja" -o -name "flags.make" | xargs sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
+        fi
         
         # 4. 执行编译
         cmake --build . --config Release --target everything
-
     # 豪华版编译 (只在 Linux 上跑，开启所有功能)
     - name: Build in release mode (Fancy)
       if: contains(matrix.name, 'fancy')
