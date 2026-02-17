@@ -79,9 +79,9 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData)
 
 	if(pResult->NumArguments() == 0)
 	{
-		log_info("chatresp", "/cmdlist will show a list of all chat commands");
-		log_info("chatresp", "/help + any command will show you the help for this command");
-		log_info("chatresp", "Example /help settings will display the help about /settings");
+		log_info("chatresp", "/cmdlist 可以显示所有聊天框指令");
+		log_info("chatresp", "/help + [任意指令] 显示对应的说明");
+		log_info("chatresp", "例如 /help settings 将会展示 /settings 的说明");
 	}
 	else
 	{
@@ -103,7 +103,7 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData)
 		else
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "Unknown command %s", pArg);
+			str_format(aBuf, sizeof(aBuf), "未知指令：%s", pArg);
 			log_info("chatresp", "%s", aBuf);
 		}
 	}
@@ -131,42 +131,42 @@ void CGameContext::ConSettings(IConsole::IResult *pResult, void *pUserData)
 		{
 			str_format(aBuf, sizeof(aBuf), "%s %s",
 				g_Config.m_SvTeam == SV_TEAM_ALLOWED ?
-					"Teams are available on this server" :
+					"服务器可以进入队伍" :
 				(g_Config.m_SvTeam == SV_TEAM_FORBIDDEN || g_Config.m_SvTeam == SV_TEAM_FORCED_SOLO) ?
-					"Teams are not available on this server" :
-					"You have to be in a team to play on this server", /*g_Config.m_SvTeamStrict ? "and if you die in a team all of you die" : */
-				"and all of your team will die if the team is locked");
+					"服务器未开启队伍" :
+					"必须进入队伍才能开始", /*g_Config.m_SvTeamStrict ? "and if you die in a team all of you die" : */
+				"队伍锁定后使用 kill 的话所有成员都会被 kill");
 			log_info("chatresp", "%s", aBuf);
 		}
 		else if(str_comp_nocase(pArg, "cheats") == 0)
 		{
 			log_info("chatresp", g_Config.m_SvTestingCommands ?
-						     "Cheats are enabled on this server" :
-						     "Cheats are disabled on this server");
+						     "服务器可以作弊" :
+						     "服务器禁止作弊");
 		}
 		else if(str_comp_nocase(pArg, "collision") == 0)
 		{
 			log_info("chatresp", ColTemp ?
-						     "Players can collide on this server" :
-						     "Players can't collide on this server");
+						     "玩家之间可以碰撞" :
+						     "玩家之间禁止碰撞");
 		}
 		else if(str_comp_nocase(pArg, "hooking") == 0)
 		{
 			log_info("chatresp", HookTemp ?
-						     "Players can hook each other on this server" :
-						     "Players can't hook each other on this server");
+						     "玩家之间可以钩住对方" :
+						     "玩家之间禁止钩住对方");
 		}
 		else if(str_comp_nocase(pArg, "endlesshooking") == 0)
 		{
 			log_info("chatresp", g_Config.m_SvEndlessDrag ?
-						     "Players hook time is unlimited" :
-						     "Players hook time is limited");
+						     "无限钩" :
+						     "无限钩取消");
 		}
 		else if(str_comp_nocase(pArg, "hitting") == 0)
 		{
 			log_info("chatresp", g_Config.m_SvHit ?
-						     "Players weapons affect others" :
-						     "Players weapons has no affect on others");
+						     "武器对他人有效" :
+						     "武器对他人无效");
 		}
 		else if(str_comp_nocase(pArg, "oldlaser") == 0)
 		{
@@ -514,7 +514,7 @@ void CGameContext::ConMap(IConsole::IResult *pResult, void *pUserData)
 
 	if(g_Config.m_SvMapVote == 0)
 	{
-		log_info("chatresp", "/map is disabled");
+		log_info("chatresp", "/map 指令禁用了");
 		return;
 	}
 
@@ -622,25 +622,25 @@ void CGameContext::ConPractice(IConsole::IResult *pResult, void *pUserData)
 
 	if(!Teams.IsValidTeamNumber(Team) || (Team == TEAM_FLOCK && g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO))
 	{
-		log_info("chatresp", "Join a team to enable practice mode, which means you can use /r, but can't earn a rank.");
+		log_info("chatresp", "开启练习模式就能用 /r 指令，但是不能获得排名。");
 		return;
 	}
 
 	if(Teams.TeamFlock(Team))
 	{
-		log_info("chatresp", "Practice mode can't be enabled in team 0 mode.");
+		log_info("chatresp", "Team 0 模式不能使用练习模式。");
 		return;
 	}
 
 	if(Teams.GetSaving(Team))
 	{
-		log_info("chatresp", "Practice mode can't be enabled while team save or load is in progress");
+		log_info("chatresp", "队伍正使用保存和加载中，练习模式不能开启。");
 		return;
 	}
 
 	if(Teams.IsPractice(Team))
 	{
-		log_info("chatresp", "Team is already in practice mode");
+		log_info("chatresp", "队伍已经是练习模式了。");
 		return;
 	}
 
@@ -668,14 +668,14 @@ void CGameContext::ConPractice(IConsole::IResult *pResult, void *pUserData)
 	int NumRequiredVotes = TeamSize / 2 + 1;
 
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' voted to %s /practice mode for your team, which means you can use practice commands, but you can't earn a rank. Type /practice to vote (%d/%d required votes)", pSelf->Server()->ClientName(pResult->m_ClientId), VotedForPractice ? "enable" : "disable", NumCurrentVotes, NumRequiredVotes);
+	str_format(aBuf, sizeof(aBuf), "'%s' 正在为了 %s 练习模式而投票，练习模式开启的话将不会获得排名。输入 /practice 可以投出一票 (%d/%d required votes)", pSelf->Server()->ClientName(pResult->m_ClientId), VotedForPractice ? "开启" : "关闭", NumCurrentVotes, NumRequiredVotes);
 	pSelf->SendChatTeam(Team, aBuf);
 
 	if(NumCurrentVotes >= NumRequiredVotes)
 	{
 		Teams.SetPractice(Team, true);
-		pSelf->SendChatTeam(Team, "Practice mode enabled for your team, happy practicing!");
-		pSelf->SendChatTeam(Team, "See /practicecmdlist for a list of all available practice commands. Most commonly used ones are /telecursor, /lasttp and /rescue");
+		pSelf->SendChatTeam(Team, "队伍开启了练习模式，祝你练习愉快！");
+		pSelf->SendChatTeam(Team, "输入 /practicecmdlist 可以查看所有练习模式相关的指令。最常用的指令有：/telecursor、 /lasttp 和 /rescue。");
 	}
 }
 
@@ -1020,7 +1020,7 @@ void CGameContext::ConLock(IConsole::IResult *pResult, void *pUserData)
 
 	if(Team == TEAM_FLOCK || !pSelf->m_pController->Teams().IsValidTeamNumber(Team))
 	{
-		log_info("chatresp", "This team can't be locked");
+		log_info("chatresp", "大厅队伍无法锁定");
 		return;
 	}
 
@@ -1037,9 +1037,9 @@ void CGameContext::ConLock(IConsole::IResult *pResult, void *pUserData)
 		pSelf->m_pController->Teams().SetTeamLock(Team, true);
 
 		if(pSelf->m_pController->Teams().TeamFlock(Team))
-			str_format(aBuf, sizeof(aBuf), "'%s' locked your team.", pSelf->Server()->ClientName(pResult->m_ClientId));
+			str_format(aBuf, sizeof(aBuf), "'%s' 锁定了队伍。", pSelf->Server()->ClientName(pResult->m_ClientId));
 		else
-			str_format(aBuf, sizeof(aBuf), "'%s' locked your team. After the race starts, killing will kill everyone in your team.", pSelf->Server()->ClientName(pResult->m_ClientId));
+			str_format(aBuf, sizeof(aBuf), "'%s' 锁定了队伍。游戏开始后，Kill 将会杀死所有 Tee。", pSelf->Server()->ClientName(pResult->m_ClientId));
 		pSelf->SendChatTeam(Team, aBuf);
 	}
 }
@@ -1117,8 +1117,8 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 	else if(Team != TEAM_FLOCK && m_pController->Teams().TeamLocked(Team) && !m_pController->Teams().IsInvited(Team, ClientId))
 	{
 		log_info("chatresp", g_Config.m_SvInvite ?
-					     "This team is locked using /lock. Only members of the team can unlock it using /lock." :
-					     "This team is locked using /lock. Only members of the team can invite you or unlock it using /lock.");
+					     "这支队伍使用了 /lock，只有成员才能再次输入 /lock 解锁。" :
+					     "这支队伍使用了 /lock，只有成员才能邀请你或者再次输入 /lock 解锁。");
 	}
 	else if(Team != TEAM_FLOCK && m_pController->Teams().Count(Team) >= g_Config.m_SvMaxTeamSize && !m_pController->Teams().TeamFlock(Team) && !m_pController->Teams().IsPractice(Team))
 	{

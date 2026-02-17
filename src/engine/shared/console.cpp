@@ -614,9 +614,9 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, int ClientId, bo
 			{
 				char aBuf[CMDLINE_LENGTH + 32];
 				if(m_FlagMask & CFGFLAG_CHAT)
-					str_format(aBuf, sizeof(aBuf), "No such command: %s. Use /cmdlist for a list of all commands.", Result.m_pCommand);
+					str_format(aBuf, sizeof(aBuf), "没有指令：%s。使用 /cmdlist 查看所有指令。", Result.m_pCommand);
 				else
-					str_format(aBuf, sizeof(aBuf), "No such command: %s.", Result.m_pCommand);
+					str_format(aBuf, sizeof(aBuf), "没有指令：%s。", Result.m_pCommand);
 				Print(OUTPUT_LEVEL_STANDARD, "chatresp", aBuf);
 			}
 		}
@@ -767,7 +767,7 @@ void CConsole::ConCommandAccess(IResult *pResult, void *pUser)
 		}
 	}
 	else
-		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
+		str_format(aBuf, sizeof(aBuf), "没有指令：'%s'.", pResult->GetString(0));
 
 	pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
