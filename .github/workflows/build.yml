@@ -93,22 +93,30 @@ jobs:
         cd ../masterping && cargo build --release
 
     # 普通 Release 编译 (只在 Windows 和 macOS 上运行，Linux 直接跑下面的 Fancy 版)
-    - name: Build in release mode 
+    - name: Build in release mode
       if: "!contains(matrix.name, 'fancy')"
       shell: bash
       run: |
-        # 强制清空环境变量，防止 Clang 被 GitHub 默认环境误导
+        # 1. 强制清理环境变量
         export CPATH=""
         export C_INCLUDE_PATH=""
         export CPLUS_INCLUDE_PATH=""
         
         mkdir release && cd release
-        # 注意这里：显式指定 SDK 路径为 macosx
+        
+        # 2. 运行 CMake 配置
         cmake ${{ matrix.cmake-args }} \
           -DCMAKE_BUILD_TYPE=Release \
           -Werror=dev \
           -DDOWNLOAD_GTEST=ON \
           -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+
+        # 3. 物理切除：从所有生成的 Ninja 和编译配置文件中删掉错误的 isystem 路径
+        # 这个路径是导致 <cstdint> 报错的罪魁祸首
+        echo "Applying physical path fix..."
+        find . -name "*.ninja" -o -name "flags.make" | xargs sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
+        
+        # 4. 执行编译
         cmake --build . --config Release --target everything
 
     # 豪华版编译 (只在 Linux 上跑，开启所有功能)
