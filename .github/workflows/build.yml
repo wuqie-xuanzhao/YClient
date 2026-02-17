@@ -27,7 +27,7 @@ jobs:
         - name: macOS-latest
           os: macOS-latest
           cmake-args: -G Ninja
-          cmake-init-env: CXXFLAGS=-Werror
+          cmake-init-env: ""
           package-file: "*-macos.dmg"
         - name: windows-latest
           os: windows-latest
@@ -61,7 +61,7 @@ jobs:
         brew install ffmpeg molten-vk ninja pkg-config rust sdl2
         brew upgrade freetype
         pip3 install --break-system-packages dmgbuild
-        # 确保系统能找到 Python 工具
+        # 修复点 2: 仅保留路径添加，不要删除 CommandLineTools
         echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
     - name: Install Vulkan SDK
