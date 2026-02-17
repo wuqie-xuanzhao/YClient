@@ -26,8 +26,15 @@ jobs:
           package-file: "*-linux_x86_64.tar.xz"
         - name: macOS-latest
           os: macOS-latest
-          # 增加 -D CMAKE_FIND_FRAMEWORK=LAST 确保优先找 Homebrew 而不是系统冲突路径
-          cmake-args: -G Ninja -DCMAKE_FIND_FRAMEWORK=LAST -DCMAKE_OSX_SYSROOT=macosx
+          # 核心改动：
+          # 1. 显式指定 SYSROOT 为 Xcode 内置的 SDK（避免指向外部的 CommandLineTools）
+          # 2. 强制 Find 模块忽略系统默认路径，只看 SDK 内部
+          cmake-args: >-
+            -G Ninja 
+            -DCMAKE_OSX_SYSROOT=macosx 
+            -DCMAKE_FIND_NO_INSTALL_PREFIX=ON 
+            -DCMAKE_FIND_FRAMEWORK=LAST 
+            -DCMAKE_FIND_APPBUNDLE=LAST
           cmake-init-env: "" 
           package-file: "*-macos.dmg"
         - name: windows-latest
@@ -103,7 +110,7 @@ jobs:
           -DDOWNLOAD_GTEST=ON \
           -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
         cmake --build . --config Release --target everything
-        
+
     # 豪华版编译 (只在 Linux 上跑，开启所有功能)
     - name: Build in release mode (Fancy)
       if: contains(matrix.name, 'fancy')
