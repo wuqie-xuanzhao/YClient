@@ -91,7 +91,6 @@ jobs:
       run: |
         cd src/mastersrv && cargo build --release
         cd ../masterping && cargo build --release
-
     # 普通 Release 编译 (只在 Windows 和 macOS 上运行，Linux 直接跑下面的 Fancy 版)
     - name: Build in release mode
       if: "!contains(matrix.name, 'fancy')"
@@ -111,16 +110,18 @@ jobs:
           -DDOWNLOAD_GTEST=ON \
           -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
 
-        # 3. 物理切除：只在 macOS 上运行，并适配正确的 sed 语法
-        # 使用 runner.os 来判断，避免 Windows 跑这个命令报错
-        if [ "${{ runner.os }}" = "macOS" ]; then
-          echo "Applying physical path fix for macOS..."
-          # macOS 的 sed 需要 -i ''，物理删除干扰 libc++ 的系统路径
-          find . -name "*.ninja" -o -name "flags.make" | xargs sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
+        # 3. 物理切除：仅在 macOS 上执行，彻底隔离 Windows 环境
+        if [[ "${{ runner.os }}" == "macOS" ]]; then
+          echo "Detected macOS, applying physical path fix..."
+          # 只有 macOS 需要处理这个路径冲突
+          find . \( -name "*.ninja" -o -name "flags.make" \) -print0 | xargs -0 sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
+        else
+          echo "Detected ${{ runner.os }}, skipping macOS-specific fix."
         fi
         
         # 4. 执行编译
         cmake --build . --config Release --target everything
+        
     # 豪华版编译 (只在 Linux 上跑，开启所有功能)
     - name: Build in release mode (Fancy)
       if: contains(matrix.name, 'fancy')
