@@ -193,11 +193,11 @@ void CGameControllerDDNet::OnPlayerConnect(CPlayer *pPlayer)
 	if(!Server()->ClientPrevIngame(ClientId))
 	{
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "'%s' 进来了", Server()->ClientName(ClientId), GetTeamName(pPlayer->GetTeam()));
+		str_format(aBuf, sizeof(aBuf), "'%s' 进入了游戏", Server()->ClientName(ClientId), GetTeamName(pPlayer->GetTeam()));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf, -1, CGameContext::FLAG_SIX);
 
 		GameServer()->SendChatTarget(ClientId, "DDraceNetwork 模组。版本号：" GAME_VERSION);
-		GameServer()->SendChatTarget(ClientId, "请访问网站 DDNet.org 或在聊天框中输入 /info ，并且请输入 /rules阅读规则。");
+		GameServer()->SendChatTarget(ClientId, "请访问网站 DDNet.org 或在聊天框中输入 /info ，并请输入 /rules阅读规则。");
 	}
 }
 
