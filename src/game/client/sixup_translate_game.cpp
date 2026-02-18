@@ -512,9 +512,9 @@ void *CGameClient::TranslateGameMsg(int *pMsgId, CUnpacker *pUnpacker, int Conn)
 
 		static char s_aBuf[128];
 		if(pMsg7->m_pReason[0])
-			str_format(s_aBuf, sizeof(s_aBuf), "'%s' has left the game (%s)", m_aClients[pMsg7->m_ClientId].m_aName, pMsg7->m_pReason);
+			str_format(s_aBuf, sizeof(s_aBuf), "'%s' 离开了游戏 (%s)", m_aClients[pMsg7->m_ClientId].m_aName, pMsg7->m_pReason);
 		else
-			str_format(s_aBuf, sizeof(s_aBuf), "'%s' has left the game", m_aClients[pMsg7->m_ClientId].m_aName);
+			str_format(s_aBuf, sizeof(s_aBuf), "'%s' 离开了游戏", m_aClients[pMsg7->m_ClientId].m_aName);
 		m_Chat.AddLine(-1, 0, s_aBuf);
 
 		return nullptr;
