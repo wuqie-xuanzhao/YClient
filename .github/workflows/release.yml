@@ -33,7 +33,7 @@ jobs:
       - name: Download Ubuntu artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.BUILD_PREFIX }}-ubuntu-22.04-fancy
+          name: ${{ env.BUILD_PREFIX }}-ddnet-ubuntu-latest-fancy
           path: ./artifacts/ubuntu
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ env.TARGET_REPOSITORY }}
