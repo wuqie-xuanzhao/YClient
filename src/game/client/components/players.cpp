@@ -437,11 +437,12 @@ void CPlayers::RenderHookCollLine(
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(HookCollColor.WithAlpha(Alpha));
 		Graphics()->QuadsDrawFreeform(vLineQuadSegments.data(), vLineQuadSegments.size());
-		if(HookTipLineSegment.has_value())
+		if(HookTipLineSegment.has_value() && g_Config.m_TcRevertHookLine != 1 /*TClient*/)
 		{
 			vLineQuadSegments.clear();
 			ConvertLineSegments(HookTipLineSegment.value());
-			HookCollColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorTeeColl));
+			if (g_Config.m_TcRevertHookLine != 2) // TClient
+				HookCollColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorTeeColl));
 			Graphics()->SetColor(HookCollColor.WithAlpha(Alpha));
 			Graphics()->QuadsDrawFreeform(vLineQuadSegments.data(), vLineQuadSegments.size());
 		}
@@ -452,9 +453,10 @@ void CPlayers::RenderHookCollLine(
 		Graphics()->LinesBegin();
 		Graphics()->SetColor(HookCollColor.WithAlpha(Alpha));
 		Graphics()->LinesDraw(vLineSegments.data(), vLineSegments.size());
-		if(HookTipLineSegment.has_value())
+		if (HookTipLineSegment.has_value() && g_Config.m_TcRevertHookLine != 1 /*TClient*/)
 		{
-			HookCollColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorTeeColl));
+			if (g_Config.m_TcRevertHookLine != 2) // TClient
+				HookCollColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorTeeColl));
 			Graphics()->SetColor(HookCollColor.WithAlpha(Alpha));
 			Graphics()->LinesDraw(&HookTipLineSegment.value(), 1);
 		}
@@ -1500,8 +1502,8 @@ void CPlayers::OnRender()
 
 			Frozen = GameClient()->m_aClients[i].m_Predicted.m_FreezeEnd != 0;
 			// TClient
-			if(g_Config.m_TcFastInputAmount > 20)
-				Frozen = GameClient()->m_aClients[i].m_PrevPredicted.m_FreezeEnd != 0;
+			if(g_Config.m_TcFastInput)
+				Frozen = GameClient()->m_aClients[i].m_RegularPredicted.m_FreezeEnd != 0;
 		}
 		else
 		{
@@ -1516,7 +1518,7 @@ void CPlayers::OnRender()
 		}
 
 		// TClient
-		if(g_Config.m_TcFreezeKatana > 0 && GameClient()->m_aClients[i].m_Predicted.m_FreezeEnd != 0)
+		if(g_Config.m_TcFrozenKatana > 0 && Frozen)
 		{
 			GameClient()->m_aClients[i].m_RenderCur.m_Weapon = WEAPON_NINJA;
 			aRenderInfo[i].m_TeeRenderFlags &= ~TEE_NO_WEAPON;
