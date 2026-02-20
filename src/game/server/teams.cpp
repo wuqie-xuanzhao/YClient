@@ -732,7 +732,7 @@ void CGameTeams::OnTeamFinish(int Team, CPlayer **Players, unsigned int Size, in
 		{
 			SetForceCharacterTeam(Players[i]->GetCid(), TEAM_FLOCK);
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "'%s' joined team 0",
+			str_format(aBuf, sizeof(aBuf), "'%s' 加入了队伍 0",
 				GameServer()->Server()->ClientName(Players[i]->GetCid()));
 			GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 		}

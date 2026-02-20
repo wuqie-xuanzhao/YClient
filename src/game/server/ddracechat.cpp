@@ -668,7 +668,7 @@ void CGameContext::ConPractice(IConsole::IResult *pResult, void *pUserData)
 	int NumRequiredVotes = TeamSize / 2 + 1;
 
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' 正在为了 %s 练习模式而投票，练习模式开启的话将不会获得排名。输入 /practice 可以投出一票 (%d/%d required votes)", pSelf->Server()->ClientName(pResult->m_ClientId), VotedForPractice ? "开启" : "关闭", NumCurrentVotes, NumRequiredVotes);
+	str_format(aBuf, sizeof(aBuf), "'%s' 正在为了%s练习模式而投票，练习模式开启的话将不会获得排名。输入 /practice 可以投出一票 (%d/%d required votes)", pSelf->Server()->ClientName(pResult->m_ClientId), VotedForPractice ? "开启" : "关闭", NumCurrentVotes, NumRequiredVotes);
 	pSelf->SendChatTeam(Team, aBuf);
 
 	if(NumCurrentVotes >= NumRequiredVotes)
@@ -1072,7 +1072,7 @@ void CGameContext::UnlockTeam(int ClientId, int Team) const
 	m_pController->Teams().SetTeamLock(Team, false);
 
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' unlocked your team.", Server()->ClientName(ClientId));
+	str_format(aBuf, sizeof(aBuf), "'%s' 解锁了队伍", Server()->ClientName(ClientId));
 	SendChatTeam(Team, aBuf);
 }
 
@@ -1103,7 +1103,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 		auto EmptyTeam = m_pController->Teams().GetFirstEmptyTeam();
 		if(!EmptyTeam.has_value())
 		{
-			log_info("chatresp", "No empty team left.");
+			log_info("chatresp", "没有空的队伍了。");
 			return;
 		}
 		Team = EmptyTeam.value();
@@ -1112,7 +1112,7 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 	char aError[512];
 	if(pPlayer->m_LastDDRaceTeamChange + (int64_t)Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick())
 	{
-		log_info("chatresp", "You can't change teams that fast!");
+		log_info("chatresp", "不能频繁切换队伍!");
 	}
 	else if(Team != TEAM_FLOCK && m_pController->Teams().TeamLocked(Team) && !m_pController->Teams().IsInvited(Team, ClientId))
 	{
@@ -1140,17 +1140,17 @@ void CGameContext::AttemptJoinTeam(int ClientId, int Team)
 		}
 
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "'%s' joined team %d",
+		str_format(aBuf, sizeof(aBuf), "'%s' 加入了队伍 %d",
 			Server()->ClientName(pPlayer->GetCid()),
 			Team);
 		SendChat(-1, TEAM_ALL, aBuf);
 		pPlayer->m_LastDDRaceTeamChange = Server()->Tick();
 
 		if(m_pController->Teams().IsPractice(Team))
-			SendChatTarget(pPlayer->GetCid(), "Practice mode enabled for your team, happy practicing!");
+			SendChatTarget(pPlayer->GetCid(), "队伍开启了练习模式，祝你练习愉快！");
 
 		if(m_pController->Teams().TeamFlock(Team))
-			SendChatTarget(pPlayer->GetCid(), "Team 0 mode enabled for your team. This will make your team behave like team 0.");
+			SendChatTarget(pPlayer->GetCid(), "队伍开启了 Team 0 模式");
 	}
 }
 
@@ -1693,7 +1693,7 @@ void CGameContext::ConRescue(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!g_Config.m_SvRescue && !Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "本服务器禁止使用 /r 回溯，并且你未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 
@@ -1725,7 +1725,7 @@ void CGameContext::ConRescueMode(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!g_Config.m_SvRescue && !Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "本服务器禁止使用 /r 回溯，并且你未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 
@@ -1735,7 +1735,7 @@ void CGameContext::ConRescueMode(IConsole::IResult *pResult, void *pUserData)
 		{
 			pPlayer->m_RescueMode = RESCUEMODE_AUTO;
 
-			pSelf->SendChatTarget(pPlayer->GetCid(), "Rescue mode changed to auto.");
+			pSelf->SendChatTarget(pPlayer->GetCid(), "救援模式切换为自动");
 		}
 
 		return;
@@ -1747,7 +1747,7 @@ void CGameContext::ConRescueMode(IConsole::IResult *pResult, void *pUserData)
 		{
 			pPlayer->m_RescueMode = RESCUEMODE_MANUAL;
 
-			pSelf->SendChatTarget(pPlayer->GetCid(), "Rescue mode changed to manual.");
+			pSelf->SendChatTarget(pPlayer->GetCid(), "救援模式切换为手动");
 		}
 
 		return;
@@ -1755,17 +1755,17 @@ void CGameContext::ConRescueMode(IConsole::IResult *pResult, void *pUserData)
 
 	if(str_comp_nocase(pResult->GetString(0), "list") == 0)
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "Available rescue modes: auto, manual");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "允许的救援模式: 自动、手动");
 	}
 	else if(str_comp_nocase(pResult->GetString(0), "") == 0)
 	{
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "Current rescue mode: %s.", pPlayer->m_RescueMode == RESCUEMODE_MANUAL ? "manual" : "auto");
+		str_format(aBuf, sizeof(aBuf), "当前救援模式: %s.", pPlayer->m_RescueMode == RESCUEMODE_MANUAL ? "manual" : "auto");
 		pSelf->SendChatTarget(pPlayer->GetCid(), aBuf);
 	}
 	else
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "Unknown argument. Check '/rescuemode list'");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "未知参数，请输入'/rescuemode list'以检查");
 	}
 }
 
@@ -1802,7 +1802,7 @@ void CGameContext::ConTeleTo(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pCallingPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pCallingPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 
@@ -1824,7 +1824,7 @@ void CGameContext::ConTeleTo(IConsole::IResult *pResult, void *pUserData)
 		}
 		if(ClientId == MAX_CLIENTS)
 		{
-			pSelf->SendChatTarget(pCallingPlayer->GetCid(), "No player with this name found.");
+			pSelf->SendChatTarget(pCallingPlayer->GetCid(), "该名字未找到任何玩家");
 			return;
 		}
 
@@ -1863,7 +1863,7 @@ void CGameContext::ConTeleXY(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pCallingPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pCallingPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 
@@ -1871,7 +1871,7 @@ void CGameContext::ConTeleXY(IConsole::IResult *pResult, void *pUserData)
 
 	if(pResult->NumArguments() != 2)
 	{
-		pSelf->SendChatTarget(pCallingPlayer->GetCid(), "Can't recognize specified arguments. Usage: /tpxy x y, e.g. /tpxy 9 3.");
+		pSelf->SendChatTarget(pCallingPlayer->GetCid(), "不能识别对应的参数，使用方法: /tpxy x y，例如：/tpxy 9 3");
 		return;
 	}
 	else
@@ -1941,7 +1941,7 @@ void CGameContext::ConTeleCursor(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 
@@ -1962,7 +1962,7 @@ void CGameContext::ConTeleCursor(IConsole::IResult *pResult, void *pUserData)
 		}
 		if(ClientId == MAX_CLIENTS)
 		{
-			pSelf->SendChatTarget(pPlayer->GetCid(), "No player with this name found.");
+			pSelf->SendChatTarget(pPlayer->GetCid(), "该名字未找到任何玩家");
 			return;
 		}
 		CPlayer *pPlayerTo = pSelf->m_apPlayers[ClientId];
@@ -1996,12 +1996,12 @@ void CGameContext::ConLastTele(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 	if(!pPlayer->m_LastTeleTee.GetPos().x)
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "You haven't previously teleported. Use /tp before using this command.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "之前未使用过传送，要用此指令请先使用 /tp 传送");
 		return;
 	}
 	pPlayer->m_LastTeleTee.Load(pChr);
@@ -2023,7 +2023,7 @@ CCharacter *CGameContext::GetPracticeCharacter(IConsole::IResult *pResult)
 	int Team = GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		SendChatTarget(pPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		SendChatTarget(pPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return nullptr;
 	}
 	return pChr;
@@ -2037,7 +2037,7 @@ void CGameContext::ConPracticeToTeleporter(IConsole::IResult *pResult, void *pUs
 	{
 		if(pSelf->Collision()->TeleOuts(pResult->GetInteger(0) - 1).empty())
 		{
-			pSelf->SendChatTarget(pChr->GetPlayer()->GetCid(), "There is no teleporter with that index on the map.");
+			pSelf->SendChatTarget(pChr->GetPlayer()->GetCid(), "地图没有对应索引的传送点");
 			return;
 		}
 
@@ -2057,7 +2057,7 @@ void CGameContext::ConPracticeToCheckTeleporter(IConsole::IResult *pResult, void
 	{
 		if(pSelf->Collision()->TeleCheckOuts(pResult->GetInteger(0) - 1).empty())
 		{
-			pSelf->SendChatTarget(pChr->GetPlayer()->GetCid(), "There is no checkpoint teleporter with that index on the map.");
+			pSelf->SendChatTarget(pChr->GetPlayer()->GetCid(), "地图没有对应索引的 CP 传送点");
 			return;
 		}
 
@@ -2083,7 +2083,7 @@ void CGameContext::ConPracticeUnSolo(IConsole::IResult *pResult, void *pUserData
 
 	if(g_Config.m_SvTeam == SV_TEAM_FORBIDDEN || g_Config.m_SvTeam == SV_TEAM_FORCED_SOLO)
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "Command is not available on solo servers");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "solo 单人服务器禁止使用指令");
 		return;
 	}
 
@@ -2091,7 +2091,7 @@ void CGameContext::ConPracticeUnSolo(IConsole::IResult *pResult, void *pUserData
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 	pChr->SetSolo(false);
@@ -2111,7 +2111,7 @@ void CGameContext::ConPracticeSolo(IConsole::IResult *pResult, void *pUserData)
 
 	if(g_Config.m_SvTeam == SV_TEAM_FORBIDDEN || g_Config.m_SvTeam == SV_TEAM_FORCED_SOLO)
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "Command is not available on solo servers");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "solo 单人服务器禁止使用指令");
 		return;
 	}
 
@@ -2119,7 +2119,7 @@ void CGameContext::ConPracticeSolo(IConsole::IResult *pResult, void *pUserData)
 	int Team = pSelf->GetDDRaceTeam(pResult->m_ClientId);
 	if(!Teams.IsPractice(Team))
 	{
-		pSelf->SendChatTarget(pPlayer->GetCid(), "You're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.");
+		pSelf->SendChatTarget(pPlayer->GetCid(), "未加入队伍并开启练习模式，注意：这样的话不会计算排名");
 		return;
 	}
 	pChr->SetSolo(true);
@@ -2392,7 +2392,7 @@ void CGameContext::ConPoints(IConsole::IResult *pResult, void *pUserData)
 		if(!g_Config.m_SvHideScore)
 			pSelf->Score()->ShowPoints(pResult->m_ClientId, pResult->GetString(0));
 		else
-			log_info("chatresp", "Showing the global points of other players is not allowed on this server.");
+			log_info("chatresp", "本服务器禁止展示其他玩家的全球分数");
 	}
 	else
 		pSelf->Score()->ShowPoints(pResult->m_ClientId,
@@ -2407,7 +2407,7 @@ void CGameContext::ConTopPoints(IConsole::IResult *pResult, void *pUserData)
 
 	if(g_Config.m_SvHideScore)
 	{
-		log_info("chatresp", "Showing the global top points is not allowed on this server.");
+		log_info("chatresp", "本服务器禁止展示全球顶尖分数");
 		return;
 	}
 
@@ -2425,7 +2425,7 @@ void CGameContext::ConTimeCP(IConsole::IResult *pResult, void *pUserData)
 
 	if(g_Config.m_SvHideScore)
 	{
-		log_info("chatresp", "Showing the checkpoint times is not allowed on this server.");
+		log_info("chatresp", "本服务器禁止显示 CP 检查点的时间");
 		return;
 	}
 
