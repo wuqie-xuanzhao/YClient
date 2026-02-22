@@ -397,17 +397,17 @@ bool CGameTeams::CanJoinTeam(int ClientId, int Team, char *pError, int ErrorSize
 	}
 	if(Team != TEAM_SUPER && m_aTeamState[Team] > ETeamState::OPEN && !m_aPractice[Team] && !m_aTeamFlock[Team])
 	{
-		str_copy(pError, "This team started already", ErrorSize);
+		str_copy(pError, "这支队伍已开始游戏", ErrorSize);
 		return false;
 	}
 	if(CurrentTeam == Team)
 	{
-		str_copy(pError, "You are in this team already", ErrorSize);
+		str_copy(pError, "已处于这支队伍!", ErrorSize);
 		return false;
 	}
 	if(!Character(ClientId))
 	{
-		str_copy(pError, "You can't change teams while you are dead/a spectator.", ErrorSize);
+		str_copy(pError, "正处于[死亡]或[旁观]状态，不能切换队伍", ErrorSize);
 		return false;
 	}
 	if(Team == TEAM_SUPER && !Character(ClientId)->IsSuper())
@@ -417,13 +417,13 @@ bool CGameTeams::CanJoinTeam(int ClientId, int Team, char *pError, int ErrorSize
 	}
 	if(Team != TEAM_SUPER && Character(ClientId)->m_DDRaceState != ERaceState::NONE && (m_aTeamState[CurrentTeam] < ETeamState::FINISHED || Team != 0))
 	{
-		str_copy(pError, "You have started racing already", ErrorSize);
+		str_copy(pError, "你已开始游戏", ErrorSize);
 		return false;
 	}
 	// No cheating through noob filter with practice and then leaving team
 	if(m_aPractice[CurrentTeam] && !m_pGameContext->PracticeByDefault())
 	{
-		str_copy(pError, "You have used practice mode already", ErrorSize);
+		str_copy(pError, "已处于练习模式", ErrorSize);
 		return false;
 	}
 
@@ -959,7 +959,7 @@ void CGameTeams::SwapTeamCharacters(CPlayer *pPrimaryPlayer, CPlayer *pTargetPla
 	if(Since < g_Config.m_SvSaveSwapGamesDelay)
 	{
 		str_format(aBuf, sizeof(aBuf),
-			"You have to wait %d seconds until you can swap.",
+			"等待%d秒才能交换位置",
 			g_Config.m_SvSaveSwapGamesDelay - Since);
 
 		GameServer()->SendChatTarget(pPrimaryPlayer->GetCid(), aBuf);
@@ -974,7 +974,7 @@ void CGameTeams::SwapTeamCharacters(CPlayer *pPrimaryPlayer, CPlayer *pTargetPla
 	if(Since >= TimeoutAfterDelay)
 	{
 		str_format(aBuf, sizeof(aBuf),
-			"Your swap request timed out %d seconds ago. Use /swap again to re-initiate it.",
+			"交换位置请求超时了%d秒，如需交换请再次使用 swap 指令",
 			Since - g_Config.m_SvSwapTimeout);
 
 		GameServer()->SendChatTarget(pPrimaryPlayer->GetCid(), aBuf);
@@ -1028,19 +1028,19 @@ void CGameTeams::CancelTeamSwap(CPlayer *pPlayer, int Team)
 
 	// Notification for the swap initiator
 	str_format(aBuf, sizeof(aBuf),
-		"You have canceled swap with %s.",
+		"你已取消和%s交换位置",
 		Server()->ClientName(pPlayer->m_SwapTargetsClientId));
 	GameServer()->SendChatTarget(pPlayer->GetCid(), aBuf);
 
 	// Notification to the target swap player
 	str_format(aBuf, sizeof(aBuf),
-		"%s has canceled swap with you.",
+		"%s取消和你交换位置",
 		Server()->ClientName(pPlayer->GetCid()));
 	GameServer()->SendChatTarget(pPlayer->m_SwapTargetsClientId, aBuf);
 
 	// Notification for the remaining team
 	str_format(aBuf, sizeof(aBuf),
-		"%s has canceled swap with %s.",
+		"%s取消和%s交换位置",
 		Server()->ClientName(pPlayer->GetCid()), Server()->ClientName(pPlayer->m_SwapTargetsClientId));
 	// Do not send the team notification for team 0
 	if(Team != 0)
@@ -1128,7 +1128,7 @@ void CGameTeams::ProcessSaveTeam()
 			ResetSavedTeam(m_apSaveTeamResult[Team]->m_RequestingPlayer, Team);
 			char aSaveId[UUID_MAXSTRSIZE];
 			FormatUuid(m_apSaveTeamResult[Team]->m_SaveId, aSaveId, UUID_MAXSTRSIZE);
-			dbg_msg("save", "Save successful: %s", aSaveId);
+			dbg_msg("save", "保存成功： %s", aSaveId);
 			break;
 		}
 		case CScoreSaveResult::SAVE_FAILED:
@@ -1165,7 +1165,7 @@ void CGameTeams::ProcessSaveTeam()
 
 			char aSaveId[UUID_MAXSTRSIZE];
 			FormatUuid(m_apSaveTeamResult[Team]->m_SaveId, aSaveId, UUID_MAXSTRSIZE);
-			dbg_msg("save", "Load successful: %s", aSaveId);
+			dbg_msg("save", "成功加载： %s", aSaveId);
 			break;
 		}
 		case CScoreSaveResult::LOAD_FAILED:
@@ -1218,7 +1218,7 @@ void CGameTeams::OnCharacterDeath(int ClientId, int Weapon)
 			}
 			else
 			{
-				GameServer()->SendChatTeam(Team, "You died, but will stay in practice until you use kill.");
+				GameServer()->SendChatTeam(Team, "死亡，但仍处于练习模式，除非使用 kill");
 			}
 		}
 		else
