@@ -25,7 +25,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, uint32_t UniqueClientId, int ClientI
 {
 	m_pGameServer = pGameServer;
 	m_ClientId = ClientId;
-	dbg_assert(GameServer()->m_pController->IsValidTeam(Team), "Invalid Team: %d", Team);
+	dbg_assert(GameServer()->m_pController->IsValidTeam(Team), "无效的队伍: %d", Team);
 	m_Team = Team;
 	m_NumInputs = 0;
 	Reset();
@@ -216,7 +216,7 @@ void CPlayer::Tick()
 		SetInitialAfk(true);
 
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "'%s' 可能超时了，但是现在可以使用超时保护重连", Server()->ClientName(m_ClientId));
+		str_format(aBuf, sizeof(aBuf), "'%s' 可能超时了，但可以使用超时保护重连", Server()->ClientName(m_ClientId));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 		Server()->ResetNetErrorString(m_ClientId);
 	}
@@ -836,7 +836,7 @@ int CPlayer::Pause(int State, bool Force)
 			{
 				if(!Force && m_LastPause && m_LastPause + (int64_t)g_Config.m_SvSpecFrequency * Server()->TickSpeed() > Server()->Tick())
 				{
-					GameServer()->SendChatTarget(m_ClientId, "不能使用 /spec 那么快。");
+					GameServer()->SendChatTarget(m_ClientId, "不要频繁使用 /spec");
 					return m_Paused; // Do not update state. Do not collect $200
 				}
 				m_pCharacter->Pause(false);

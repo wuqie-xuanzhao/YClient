@@ -55,9 +55,9 @@ void CGameContext::ConInfo(IConsole::IResult *pResult, void *pUserData)
 		str_format(aBuf, sizeof(aBuf), "Git revision hash: %s", GIT_SHORTREV_HASH);
 		log_info("chatresp", "%s", aBuf);
 	}
-	log_info("chatresp", "Official site: DDNet.org");
-	log_info("chatresp", "For more info: /cmdlist");
-	log_info("chatresp", "Or visit DDNet.org");
+	log_info("chatresp", "官方网址: DDNet.org");
+	log_info("chatresp", "查看更多指令: /cmdlist");
+	log_info("chatresp", "或者访问: DDNet.org");
 }
 
 void CGameContext::ConList(IConsole::IResult *pResult, void *pUserData)
@@ -93,7 +93,7 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData)
 			if(pCmdInfo->Params())
 			{
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "Usage: %s %s", pCmdInfo->Name(), pCmdInfo->Params());
+				str_format(aBuf, sizeof(aBuf), "使用方法: %s %s", pCmdInfo->Name(), pCmdInfo->Params());
 				log_info("chatresp", "%s", aBuf);
 			}
 
@@ -622,25 +622,25 @@ void CGameContext::ConPractice(IConsole::IResult *pResult, void *pUserData)
 
 	if(!Teams.IsValidTeamNumber(Team) || (Team == TEAM_FLOCK && g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO))
 	{
-		log_info("chatresp", "开启练习模式就能用 /r 指令，但是不能获得排名。");
+		log_info("chatresp", "开启练习模式就能用 /r 指令，但是不能获得排名");
 		return;
 	}
 
 	if(Teams.TeamFlock(Team))
 	{
-		log_info("chatresp", "Team 0 模式不能使用练习模式。");
+		log_info("chatresp", "Team 0 模式不能使用练习模式");
 		return;
 	}
 
 	if(Teams.GetSaving(Team))
 	{
-		log_info("chatresp", "队伍正使用保存和加载中，练习模式不能开启。");
+		log_info("chatresp", "队伍正使用保存和加载中，练习模式不能开启");
 		return;
 	}
 
 	if(Teams.IsPractice(Team))
 	{
-		log_info("chatresp", "队伍已经是练习模式了。");
+		log_info("chatresp", "队伍已经是练习模式了");
 		return;
 	}
 
@@ -675,7 +675,7 @@ void CGameContext::ConPractice(IConsole::IResult *pResult, void *pUserData)
 	{
 		Teams.SetPractice(Team, true);
 		pSelf->SendChatTeam(Team, "队伍开启了练习模式，祝你练习愉快！");
-		pSelf->SendChatTeam(Team, "输入 /practicecmdlist 可以查看所有练习模式相关的指令。最常用的指令有：/telecursor、 /lasttp 和 /rescue。");
+		pSelf->SendChatTeam(Team, "输入 /practicecmdlist 可以查看所有练习模式相关的指令。最常用的指令有：/telecursor、 /lasttp 和 /rescue");
 	}
 }
 
@@ -698,19 +698,19 @@ void CGameContext::ConUnPractice(IConsole::IResult *pResult, void *pUserData)
 
 	if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team == TEAM_FLOCK)
 	{
-		log_info("chatresp", "Practice mode can't be disabled for team 0");
+		log_info("chatresp", "Team 0 不能取消练习模式");
 		return;
 	}
 
 	if(!Teams.IsPractice(Team))
 	{
-		log_info("chatresp", "Team isn't in practice mode");
+		log_info("chatresp", "队伍不是练习模式");
 		return;
 	}
 
 	if(Teams.GetSaving(Team))
 	{
-		log_info("chatresp", "Practice mode can't be disabled while team save or load is in progress");
+		log_info("chatresp", "保存和加载进程中不能取消练习模式");
 		return;
 	}
 

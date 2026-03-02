@@ -130,16 +130,31 @@ jobs:
         cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. -DANTIBOT=ON -DWEBSOCKETS=ON ..
         cmake --build . --config RelWithDebInfo --target everything
 
-    # --- 打包与上传 ---
+# --- 打包与上传 ---
     - name: Package
+      shell: bash
       run: |
         cd release
+        # 执行原有的打包命令
         cmake --build . --config Release --target package_default || cmake --build . --config RelWithDebInfo --target package_default
-        mkdir artifacts
+        
+        # 创建存放最终产物的目录
+        mkdir -p artifacts
+        
+        # 1. 移动原本的压缩包 (tar.xz / dmg / zip)
         mv ${{ matrix.package-file }} artifacts/
+        
+        # 2. 【关键修复】如果是 Linux Fancy 版本，把缺失的 .so 文件也塞进去
+        if [[ "${{ matrix.name }}" == "ubuntu-latest-fancy" ]]; then
+          echo "Adding missing shared libraries for Fancy build..."
+          # 查找当前目录下所有的 .so 文件并复制到 artifacts 目录
+          # 这样它们会和 tar.xz 一起出现在 GitHub 的下载列表里
+          cp *.so* artifacts/ 
+        fi
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ddnet-${{ matrix.name }}
+        # 这样上传的不仅有压缩包，还有那两个命根子 .so 文件
         path: release/artifacts/
