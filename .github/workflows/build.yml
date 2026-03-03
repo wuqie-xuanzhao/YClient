@@ -135,26 +135,32 @@ jobs:
       shell: bash
       run: |
         cd release
-        # 执行原有的打包命令
-        cmake --build . --config Release --target package_default || cmake --build . --config RelWithDebInfo --target package_default
+        # 1. 执行原有的打包命令生成基础包
+        cmake --build . --config RelWithDebInfo --target package_default || cmake --build . --config Release --target package_default
         
-        # 创建存放最终产物的目录
-        mkdir -p artifacts
+        # 2. 创建最终交付目录
+        mkdir -p artifacts/YClient-linux_x86_64
         
-        # 1. 移动原本的压缩包 (tar.xz / dmg / zip)
+        # 3. 移动压缩包
         mv ${{ matrix.package-file }} artifacts/
         
-        # 2. 【关键修复】如果是 Linux Fancy 版本，把缺失的 .so 文件也塞进去
+        # 4. 【核心增强】提取所有运行时必需的 .so 库
         if [[ "${{ matrix.name }}" == "ubuntu-latest-fancy" ]]; then
-          echo "Adding missing shared libraries for Fancy build..."
-          # 查找当前目录下所有的 .so 文件并复制到 artifacts 目录
-          # 这样它们会和 tar.xz 一起出现在 GitHub 的下载列表里
-          cp *.so* artifacts/ 
+          echo "Bundling dependencies for Native Ubuntu execution..."
+          
+          # 拷贝你编译生成的私有库
+          cp *.so* artifacts/YClient-linux_x86_64/ 2>/dev/null || true
+          
+          # 拷贝主程序到交付目录方便直接运行
+          cp DDNet-Server artifacts/YClient-linux_x86_64/
+          
+          # (可选) 甚至可以把系统里对应的关键库也抓出来（防止服务器版本太旧）
+          # cp /lib/x86_64-linux-gnu/libwebsockets.so.19 artifacts/YClient-linux_x86_64/
         fi
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ddnet-${{ matrix.name }}
-        # 这样上传的不仅有压缩包，还有那两个命根子 .so 文件
+        name: yclient-${{ matrix.name }}
+        # 上传整个 artifacts 目录，这样你下载后就是一个完整的“全家桶”
         path: release/artifacts/
