@@ -427,7 +427,28 @@ void CScore::CheckPoints(int ClientId, const char *pPlayerName)
 	int Points = m_pScorePoints->GetPointsForPlayer(pPlayerName);
 	if(Points == 0 && !m_pScorePoints->IsFetching(pPlayerName))
 	{
-		if(str_comp(pPlayerName, Server()->ClientName(ClientId)) == 0)
+		bool HasOtherClientWithPoints = false;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(i == ClientId)
+				continue;
+			if(!Server()->ClientIngame(i))
+				continue;
+			const NETADDR *pAddr = Server()->ClientAddr(i);
+			const NETADDR *pMyAddr = Server()->ClientAddr(ClientId);
+			if(pAddr && pMyAddr && mem_comp(pAddr, pMyAddr, sizeof(NETADDR)) == 0)
+			{
+				const char *pOtherName = Server()->ClientName(i);
+				int OtherPoints = m_pScorePoints->GetPointsForPlayer(pOtherName);
+				if(OtherPoints > 0)
+				{
+					HasOtherClientWithPoints = true;
+					break;
+				}
+			}
+		}
+
+		if(!HasOtherClientWithPoints)
 		{
 			Server()->Kick(ClientId, "You have 0 points, you are not allowed to enter this server");
 		}
