@@ -3,7 +3,7 @@ name: build
 on:
   push:
     branches-ignore:
-      - 'gh-readonly-queue/**'
+      - "gh-readonly-queue/**"
   pull_request:
   merge_group:
   workflow_dispatch:
@@ -19,268 +19,267 @@ jobs:
         # 仅保留你需要的三个核心环境
         name: [ubuntu-latest-fancy, macOS-latest, windows-latest]
         include:
-        - name: ubuntu-latest-fancy
-          os: ubuntu-latest
-          cmake-args: -G Ninja
-          cmake-init-env: CXXFLAGS=-Werror
-          package-file: "*-linux_x86_64.tar.xz"
-        - name: macOS-latest
-          os: macOS-latest
-          # 核心改动：
-          # 1. 显式指定 SYSROOT 为 Xcode 内置的 SDK（避免指向外部的 CommandLineTools）
-          # 2. 强制 Find 模块忽略系统默认路径，只看 SDK 内部
-          cmake-args: >-
-            -G Ninja 
-            -DCMAKE_OSX_SYSROOT=macosx 
-            -DCMAKE_FIND_NO_INSTALL_PREFIX=ON 
-            -DCMAKE_FIND_FRAMEWORK=LAST 
-            -DCMAKE_FIND_APPBUNDLE=LAST
-          cmake-init-env: "" 
-          package-file: "*-macos.dmg"
-        - name: windows-latest
-          os: windows-latest
-          cmake-args: -A x64 -DEXCEPTION_HANDLING=ON -DVULKAN=ON
-          cmake-init-env: CXXFLAGS=/WX LDFLAGS=/WX
-          package-file: "*-win64.zip"
-          executable-suffix: .exe
+          - name: ubuntu-latest-fancy
+            os: ubuntu-latest
+            cmake-args: -G Ninja
+            cmake-init-env: CXXFLAGS=-Werror
+            package-file: "*-linux_x86_64.tar.xz"
+          - name: macOS-latest
+            os: macOS-latest
+            # 核心改动：
+            # 1. 显式指定 SYSROOT 为 Xcode 内置的 SDK（避免指向外部的 CommandLineTools）
+            # 2. 强制 Find 模块忽略系统默认路径，只看 SDK 内部
+            cmake-args: >-
+              -G Ninja 
+              -DCMAKE_OSX_SYSROOT=macosx 
+              -DCMAKE_FIND_NO_INSTALL_PREFIX=ON 
+              -DCMAKE_FIND_FRAMEWORK=LAST 
+              -DCMAKE_FIND_APPBUNDLE=LAST
+            cmake-init-env: ""
+            package-file: "*-macos.dmg"
+          - name: windows-latest
+            os: windows-latest
+            cmake-args: -A x64 -DEXCEPTION_HANDLING=ON -DVULKAN=ON
+            cmake-init-env: CXXFLAGS=/WX LDFLAGS=/WX
+            package-file: "*-win64.zip"
+            executable-suffix: .exe
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    # --- 依赖准备阶段 ---
-    - name: Prepare Linux
-      if: contains(matrix.os, 'ubuntu')
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install pkg-config ninja-build libfreetype6-dev libnotify-dev libsdl2-dev libsqlite3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libx264-dev libpng-dev valgrind gcovr libglew-dev cmake libmariadb-dev libwebsockets-dev mariadb-server -y
-        # 启动数据库用于测试环境
-        sudo systemctl stop mysql || true
-        sudo rm -rf /var/lib/mysql/
-        sudo mysql_install_db --user=mysql --datadir=/var/lib/mysql/
-        sudo mysqld_safe --datadir='/var/lib/mysql/' --no-watch &
-        sleep 5
+      # --- 依赖准备阶段 ---
+      - name: Prepare Linux
+        if: contains(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install pkg-config ninja-build libfreetype6-dev libnotify-dev libsdl2-dev libsqlite3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libx264-dev libpng-dev valgrind gcovr libglew-dev cmake libmariadb-dev libwebsockets-dev mariadb-server -y
+          # 启动数据库用于测试环境
+          sudo systemctl stop mysql || true
+          sudo rm -rf /var/lib/mysql/
+          sudo mysql_install_db --user=mysql --datadir=/var/lib/mysql/
+          sudo mysqld_safe --datadir='/var/lib/mysql/' --no-watch &
+          sleep 5
 
-    - name: Prepare macOS
-      if: contains(matrix.os, 'macOS')
-      run: |
-        brew update
-        brew install ffmpeg molten-vk ninja pkg-config sdl2
-        brew upgrade freetype
-        pip3 install --break-system-packages dmgbuild
-        # 修复点 2: 仅保留路径添加，不要删除 CommandLineTools
-        echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+      - name: Prepare macOS
+        if: contains(matrix.os, 'macOS')
+        run: |
+          brew update
+          brew install ffmpeg molten-vk ninja pkg-config sdl2
+          brew upgrade freetype
+          pip3 install --break-system-packages dmgbuild
+          # 修复点 2: 仅保留路径添加，不要删除 CommandLineTools
+          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
-    - name: Install Vulkan SDK
-      uses: humbletim/install-vulkan-sdk@v1.2
-      with:
-        version: 1.3.296.0
-        cache: true
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.3.296.0
+          cache: true
 
-    - name: Cache Rust dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        workspaces: |
-          src/mastersrv
-          src/masterping
-          ./
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src/mastersrv
+            src/masterping
+            ./
 
-    # --- 编译阶段 ---
-    - name: Build Rust Components
-      run: |
-        cd src/mastersrv && cargo build --release
-        cd ../masterping && cargo build --release
-    # 普通 Release 编译 (只在 Windows 和 macOS 上运行，Linux 直接跑下面的 Fancy 版)
-    - name: Build in release mode
-      if: "!contains(matrix.name, 'fancy')"
-      shell: bash
-      run: |
-        # 1. 强制清理环境变量
-        export CPATH=""
-        export C_INCLUDE_PATH=""
-        export CPLUS_INCLUDE_PATH=""
-        
-        mkdir -p release && cd release
-        
-        # 2. 运行 CMake 配置
-        cmake ${{ matrix.cmake-args }} \
-          -DCMAKE_BUILD_TYPE=Release \
-          -Werror=dev \
-          -DDOWNLOAD_GTEST=ON \
-          -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+      # --- 编译阶段 ---
+      - name: Build Rust Components
+        run: |
+          cd src/mastersrv && cargo build --release
+          cd ../masterping && cargo build --release
+      # 普通 Release 编译 (只在 Windows 和 macOS 上运行，Linux 直接跑下面的 Fancy 版)
+      - name: Build in release mode
+        if: "!contains(matrix.name, 'fancy')"
+        shell: bash
+        run: |
+          # 1. 强制清理环境变量
+          export CPATH=""
+          export C_INCLUDE_PATH=""
+          export CPLUS_INCLUDE_PATH=""
 
-        # 3. 物理切除：仅在 macOS 上执行，彻底隔离 Windows 环境
-        if [[ "${{ runner.os }}" == "macOS" ]]; then
-          echo "Detected macOS, applying physical path fix..."
-          # 只有 macOS 需要处理这个路径冲突
-          find . \( -name "*.ninja" -o -name "flags.make" \) -print0 | xargs -0 sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
-        else
-          echo "Detected ${{ runner.os }}, skipping macOS-specific fix."
-        fi
-        
-        # 4. 执行编译
-        cmake --build . --config Release --target everything
-        
-    # 豪华版编译 (只在 Linux 上跑，开启所有功能)
-    - name: Build in release mode (Fancy)
-      if: contains(matrix.name, 'fancy')
-      run: |
-        mkdir release && cd release
-        cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. -DANTIBOT=ON -DWEBSOCKETS=ON ..
-        cmake --build . --config RelWithDebInfo --target everything
+          mkdir -p release && cd release
 
-# --- 打包与上传 ---
-    - name: Package
-      shell: bash
-      run: |
-        cd release
-        # 1. 执行原有的打包命令生成基础包
-        cmake --build . --config RelWithDebInfo --target package_default || cmake --build . --config Release --target package_default
-        
-        # 2. 创建最终交付目录
-        mkdir -p artifacts/YClient-linux_x86_64
-        
-        # 3. 移动压缩包
-        mv ${{ matrix.package-file }} artifacts/
-        
-        # 4. 【核心增强】提取所有运行时必需的 .so 库
-        if [[ "${{ matrix.name }}" == "ubuntu-latest-fancy" ]]; then
-          echo "Bundling dependencies for Native Ubuntu execution..."
-          
-          # 拷贝你编译生成的私有库
-          cp *.so* artifacts/YClient-linux_x86_64/ 2>/dev/null || true
-          
-          # 拷贝主程序到交付目录方便直接运行
-          cp DDNet-Server artifacts/YClient-linux_x86_64/
-          
-          # (可选) 甚至可以把系统里对应的关键库也抓出来（防止服务器版本太旧）
-          # cp /lib/x86_64-linux-gnu/libwebsockets.so.19 artifacts/YClient-linux_x86_64/
-        fi
+          # 2. 运行 CMake 配置
+          cmake ${{ matrix.cmake-args }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -Werror=dev \
+            -DDOWNLOAD_GTEST=ON \
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: yclient-${{ matrix.name }}
-        path: release/artifacts/
+          # 3. 物理切除：仅在 macOS 上执行，彻底隔离 Windows 环境
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            echo "Detected macOS, applying physical path fix..."
+            # 只有 macOS 需要处理这个路径冲突
+            find . \( -name "*.ninja" -o -name "flags.make" \) -print0 | xargs -0 sed -i '' 's|-isystem /Library/Developer/CommandLineTools[^ ]*||g'
+          else
+            echo "Detected ${{ runner.os }}, skipping macOS-specific fix."
+          fi
+
+          # 4. 执行编译
+          cmake --build . --config Release --target everything
+
+      # 豪华版编译 (只在 Linux 上跑，开启所有功能)
+      - name: Build in release mode (Fancy)
+        if: contains(matrix.name, 'fancy')
+        run: |
+          mkdir release && cd release
+          cmake -E env ${{ matrix.cmake-init-env }} cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. -DANTIBOT=ON -DWEBSOCKETS=ON ..
+          cmake --build . --config RelWithDebInfo --target everything
+
+      # --- 打包与上传 ---
+      - name: Package
+        shell: bash
+        run: |
+          cd release
+          # 1. 执行原有的打包命令生成基础包
+          cmake --build . --config RelWithDebInfo --target package_default || cmake --build . --config Release --target package_default
+
+          # 2. 创建最终交付目录
+          mkdir -p artifacts/YClient-linux_x86_64
+
+          # 3. 移动压缩包
+          mv ${{ matrix.package-file }} artifacts/
+
+          # 4. 【核心增强】提取所有运行时必需的 .so 库
+          if [[ "${{ matrix.name }}" == "ubuntu-latest-fancy" ]]; then
+            echo "Bundling dependencies for Native Ubuntu execution..."
+            
+            # 拷贝你编译生成的私有库
+            cp *.so* artifacts/YClient-linux_x86_64/ 2>/dev/null || true
+            
+            # 拷贝主程序到交付目录方便直接运行
+            cp DDNet-Server artifacts/YClient-linux_x86_64/
+            
+            # (可选) 甚至可以把系统里对应的关键库也抓出来（防止服务器版本太旧）
+            # cp /lib/x86_64-linux-gnu/libwebsockets.so.19 artifacts/YClient-linux_x86_64/
+          fi
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: yclient-${{ matrix.name }}
+          path: release/artifacts/
 
   build-android:
     runs-on: ubuntu-24.04
     env:
       CARGO_HTTP_MULTIPLEXING: false
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Validate Gradle Wrapper
-      uses: gradle/actions/wrapper-validation@v4
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
-    - name: Prepare Linux
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install ninja-build openjdk-21-jdk openssl
-        curl -LO https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-Linux-x86_64.tar.gz
-        mkdir -p /home/runner/cmake
-        tar --strip-components 1 -C /home/runner/cmake -xf cmake-3.22.1-Linux-x86_64.tar.gz
-        rustup default 1.92.0
-        cargo install cargo-ndk
-        rustup target add armv7-linux-androideabi
-        rustup target add i686-linux-android
-        rustup target add aarch64-linux-android
-        rustup target add x86_64-linux-android
-        scripts/android/download_android_sdk.sh /home/runner
+      - name: Prepare Linux
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install ninja-build openjdk-21-jdk openssl
+          curl -LO https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-Linux-x86_64.tar.gz
+          mkdir -p /home/runner/cmake
+          tar --strip-components 1 -C /home/runner/cmake -xf cmake-3.22.1-Linux-x86_64.tar.gz
+          rustup default 1.92.0
+          cargo install cargo-ndk
+          rustup target add armv7-linux-androideabi
+          rustup target add i686-linux-android
+          rustup target add aarch64-linux-android
+          rustup target add x86_64-linux-android
+          scripts/android/download_android_sdk.sh /home/runner
 
-    - name: Install Vulkan SDK
-      uses: humbletim/install-vulkan-sdk@v1.2
-      with:
-        version: 1.3.296.0
-        cache: true
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.3.296.0
+          cache: true
 
-    - name: Cache Rust dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
           workspaces: |
-              src/mastersrv
-              src/masterping
-              ./
+            src/mastersrv
+            src/masterping
+            ./
 
-    - name: Build Android app
-      env:
-        TW_KEY_NAME: /home/runner/DDNet.jks
-        TW_KEY_ALIAS: DDNet-Key
-      run: |
-        export TW_KEY_PW="$(openssl rand -base64 32)"
-        keytool -genkey -v -keystore "$TW_KEY_NAME" -keyalg RSA -keysize 2048 -validity 10000 -alias "$TW_KEY_ALIAS" -storepass "$TW_KEY_PW" -dname "CN=DDNet CI, OU=DDNet, O=DDNet"
-        export ANDROID_HOME="/home/runner/Android/Sdk"
-        unset ANDROID_SDK_ROOT
-        export PATH=/home/runner/cmake/bin:$PATH
-        scripts/android/cmake_android.sh all DDNet org.ddnet.client Release build-android
-        mkdir artifacts
-        mv build-android/DDNet.apk artifacts
+      - name: Build Android app
+        env:
+          TW_KEY_NAME: /home/runner/DDNet.jks
+          TW_KEY_ALIAS: DDNet-Key
+        run: |
+          export TW_KEY_PW="$(openssl rand -base64 32)"
+          keytool -genkey -v -keystore "$TW_KEY_NAME" -keyalg RSA -keysize 2048 -validity 10000 -alias "$TW_KEY_ALIAS" -storepass "$TW_KEY_PW" -dname "CN=DDNet CI, OU=DDNet, O=DDNet"
+          export ANDROID_HOME="/home/runner/Android/Sdk"
+          unset ANDROID_SDK_ROOT
+          export PATH=/home/runner/cmake/bin:$PATH
+          scripts/android/cmake_android.sh all DDNet org.ddnet.client Release build-android
+          mkdir artifacts
+          mv build-android/DDNet.apk artifacts
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ddnet-android
-        path: artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddnet-android
+          path: artifacts
 
   build-emscripten:
     runs-on: ubuntu-24.04
     env:
       CARGO_HTTP_MULTIPLEXING: false
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Prepare Linux
-      run: |
-        curl -LO https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-Linux-x86_64.tar.gz
-        mkdir -p /home/runner/cmake
-        tar --strip-components 1 -C /home/runner/cmake -xf cmake-3.22.1-Linux-x86_64.tar.gz
-        rustup default 1.89.0
-        rustup target add wasm32-unknown-emscripten
-        git clone https://github.com/emscripten-core/emsdk emsdk
-        cd emsdk
-        ./emsdk install 4.0.22
-        ./emsdk activate 4.0.22
+      - name: Prepare Linux
+        run: |
+          curl -LO https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-Linux-x86_64.tar.gz
+          mkdir -p /home/runner/cmake
+          tar --strip-components 1 -C /home/runner/cmake -xf cmake-3.22.1-Linux-x86_64.tar.gz
+          rustup default 1.89.0
+          rustup target add wasm32-unknown-emscripten
+          git clone https://github.com/emscripten-core/emsdk emsdk
+          cd emsdk
+          ./emsdk install 4.0.22
+          ./emsdk activate 4.0.22
 
-    - name: Cache Rust dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
           workspaces: |
-              src/mastersrv
-              src/masterping
-              ./
+            src/mastersrv
+            src/masterping
+            ./
 
-    - name: Build headless Emscripten client in debug mode
-      run: |
-        export PATH=/home/runner/cmake/bin:$PATH
-        source emsdk/emsdk_env.sh
-        emcmake cmake -H. -G "Unix Makefiles" -B build-emscripten-headless -DCMAKE_BUILD_TYPE=Debug -DVIDEORECORDER=OFF -DVULKAN=OFF -DSERVER=OFF -DTOOLS=OFF -DHEADLESS_CLIENT=ON -DPREFER_BUNDLED_LIBS=ON
-        cmake --build build-emscripten-headless --target game-client -j$(nproc)
+      - name: Build headless Emscripten client in debug mode
+        run: |
+          export PATH=/home/runner/cmake/bin:$PATH
+          source emsdk/emsdk_env.sh
+          emcmake cmake -H. -G "Unix Makefiles" -B build-emscripten-headless -DCMAKE_BUILD_TYPE=Debug -DVIDEORECORDER=OFF -DVULKAN=OFF -DSERVER=OFF -DTOOLS=OFF -DHEADLESS_CLIENT=ON -DPREFER_BUNDLED_LIBS=ON
+          cmake --build build-emscripten-headless --target game-client -j$(nproc)
 
-    - name: Test headless Emscripten client
-      run: |
-        export MOZ_HEADLESS=1
-        source emsdk/emsdk_env.sh
-        emrun --browser firefox build-emscripten-headless/DDNet.html -- "quit"
+      - name: Test headless Emscripten client
+        run: |
+          export MOZ_HEADLESS=1
+          source emsdk/emsdk_env.sh
+          emrun --browser firefox build-emscripten-headless/DDNet.html -- "quit"
 
-    - name: Build Emscripten client in release mode
-      run: |
-        export PATH=/home/runner/cmake/bin:$PATH
-        source emsdk/emsdk_env.sh
-        # -G "Unix Makefiles" required due to https://gitlab.kitware.com/cmake/cmake/-/issues/16395
-        emcmake cmake -H. -G "Unix Makefiles" -B build-emscripten-release -DCMAKE_BUILD_TYPE=Release -DVIDEORECORDER=OFF -DVULKAN=OFF -DSERVER=OFF -DTOOLS=OFF -DPREFER_BUNDLED_LIBS=ON
-        cmake --build build-emscripten-release --target game-client -j$(nproc)
-        cmake --build build-emscripten-release --target package_default
-        mkdir artifacts
-        mv build-emscripten-release/*-Emscripten.tar.xz artifacts
+      - name: Build Emscripten client in release mode
+        run: |
+          export PATH=/home/runner/cmake/bin:$PATH
+          source emsdk/emsdk_env.sh
+          # -G "Unix Makefiles" required due to https://gitlab.kitware.com/cmake/cmake/-/issues/16395
+          emcmake cmake -H. -G "Unix Makefiles" -B build-emscripten-release -DCMAKE_BUILD_TYPE=Release -DVIDEORECORDER=OFF -DVULKAN=OFF -DSERVER=OFF -DTOOLS=OFF -DPREFER_BUNDLED_LIBS=ON
+          cmake --build build-emscripten-release --target game-client -j$(nproc)
+          cmake --build build-emscripten-release --target package_default
+          mkdir artifacts
+          mv build-emscripten-release/*-Emscripten.tar.xz artifacts
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ddnet-emscripten
-        path: artifacts
->>>>>>> upstream/master
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddnet-emscripten
+          path: artifacts

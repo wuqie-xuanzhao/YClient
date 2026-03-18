@@ -6,6 +6,7 @@
 
 #include <base/system.h>
 
+#include <engine/http.h>
 #include <engine/server.h>
 #include <engine/server/databases/connection_pool.h>
 #include <engine/shared/config.h>
@@ -109,6 +110,9 @@ CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool) :
 		Server()->SetErrorShutdown("sql too few words in wordlist");
 		return;
 	}
+
+	IHttp *pHttp = Kernel()->RequestInterface<IHttp>();
+	m_pScorePoints = std::make_unique<CScorePoints>(pHttp);
 }
 
 void CScore::LoadBestTime()
@@ -410,4 +414,35 @@ void CScore::GetSaves(int ClientId)
 	if(RateLimitPlayer(ClientId))
 		return;
 	ExecPlayerThread(CScoreWorker::GetSaves, "get saves", ClientId, "", 0);
+}
+
+void CScore::CheckPoints(int ClientId, const char *pPlayerName)
+{
+	if(g_Config.m_SvMinPoints <= 0)
+		return;
+	if(!m_pScorePoints)
+		return;
+
+	int Points = m_pScorePoints->GetPointsForPlayer(pPlayerName);
+	if(Points == 0 && !m_pScorePoints->IsFetching(pPlayerName))
+	{
+		if(str_comp(pPlayerName, Server()->ClientName(ClientId)) == 0)
+		{
+			Server()->Kick(ClientId, "You have 0 points, you are not allowed to enter this server");
+		}
+	}
+}
+
+int CScore::GetPoints(const char *pPlayerName)
+{
+	if(!m_pScorePoints)
+		return 0;
+	return m_pScorePoints->GetPointsForPlayer(pPlayerName);
+}
+
+bool CScore::IsFetchingPoints(const char *pPlayerName) const
+{
+	if(!m_pScorePoints)
+		return false;
+	return m_pScorePoints->IsFetching(pPlayerName);
 }

@@ -85,6 +85,7 @@ void CPlayer::Reset()
 	m_TuneZoneOld = m_TuneZone;
 	m_Halloween = false;
 	m_FirstPacket = true;
+	m_PointsChecked = false;
 
 	m_SendVoteIndex = -1;
 
@@ -177,6 +178,15 @@ void CPlayer::Tick()
 
 	if(!Server()->ClientIngame(m_ClientId))
 		return;
+
+	if(!m_PointsChecked && g_Config.m_SvMinPoints > 0)
+	{
+		if(!GameServer()->Score()->IsFetchingPoints(Server()->ClientName(m_ClientId)))
+		{
+			GameServer()->Score()->CheckPoints(m_ClientId, Server()->ClientName(m_ClientId));
+			m_PointsChecked = true;
+		}
+	}
 
 	if(m_ChatScore > 0)
 		m_ChatScore--;
