@@ -112,7 +112,7 @@ CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool) :
 		return;
 	}
 
-	IHttp *pHttp = Server()->Kernel()->RequestInterface<IHttp>();
+	IHttp *pHttp = Kernel()->RequestInterface<IHttp>();
 	m_pScorePoints = std::make_unique<CScorePoints>(pHttp);
 }
 
