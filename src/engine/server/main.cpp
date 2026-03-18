@@ -1,5 +1,10 @@
+#include <base/crashdump.h>
+#include <base/detect.h>
+#include <base/io.h>
 #include <base/logger.h>
-#include <base/system.h>
+#include <base/os.h>
+#include <base/process.h>
+#include <base/str.h>
 #include <base/windows.h>
 
 #include <engine/console.h>
@@ -22,6 +27,8 @@
 #if defined(CONF_FAMILY_WINDOWS)
 #include <windows.h>
 #elif defined(CONF_PLATFORM_ANDROID)
+#include <base/fs.h>
+
 #include <jni.h>
 #endif
 
@@ -125,7 +132,7 @@ int main(int argc, const char **argv)
 		char aBufName[IO_MAX_PATH_LENGTH];
 		char aDate[64];
 		str_timestamp(aDate, sizeof(aDate));
-		str_format(aBufName, sizeof(aBufName), "dumps/" GAME_NAME "-Server_%s_crash_log_%s_%d_%s.RTP", CONF_PLATFORM_STRING, aDate, pid(), GIT_SHORTREV_HASH != nullptr ? GIT_SHORTREV_HASH : "");
+		str_format(aBufName, sizeof(aBufName), "dumps/" GAME_NAME "-Server_%s_crash_log_%s_%d_%s.RTP", CONF_PLATFORM_STRING, aDate, process_id(), GIT_SHORTREV_HASH != nullptr ? GIT_SHORTREV_HASH : "");
 		pStorage->GetCompletePath(IStorage::TYPE_SAVE, aBufName, aBuf, sizeof(aBuf));
 		crashdump_init_if_available(aBuf);
 	}
@@ -135,10 +142,6 @@ int main(int argc, const char **argv)
 
 	IConfigManager *pConfigManager = CreateConfigManager();
 	pKernel->RegisterInterface(pConfigManager);
-
-	IEngineMap *pEngineMap = CreateEngineMap();
-	pKernel->RegisterInterface(pEngineMap); // IEngineMap
-	pKernel->RegisterInterface(static_cast<IMap *>(pEngineMap), false);
 
 	IEngineAntibot *pEngineAntibot = CreateEngineAntibot();
 	pKernel->RegisterInterface(pEngineAntibot); // IEngineAntibot

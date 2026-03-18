@@ -4,6 +4,7 @@
 
 #include <base/log.h>
 #include <base/str.h>
+#include <base/time.h>
 
 #include <engine/keys.h>
 
@@ -34,7 +35,7 @@ void CFontTyper::SetTile(ivec2 Pos, unsigned char Index, const std::shared_ptr<C
 
 bool CFontTyper::OnInput(const IInput::CEvent &Event)
 {
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Editor()->Map()->SelectedLayerType(0, LAYERTYPE_TILES));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 	if(!pLayer)
 	{
 		if(IsActive())
@@ -161,7 +162,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 
 void CFontTyper::TextModeOn()
 {
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Editor()->Map()->SelectedLayerType(0, LAYERTYPE_TILES));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 	if(!pLayer)
 		return;
 	if(pLayer->m_Image == -1)
@@ -181,7 +182,7 @@ void CFontTyper::TextModeOff()
 	if(Editor()->m_Dialog == DIALOG_PSEUDO_FONT_TYPER)
 		Editor()->m_Dialog = DIALOG_NONE;
 	if(m_TilesPlacedSinceActivate)
-		Editor()->Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(Editor()->Map(), Editor()->Map()->m_SelectedGroup), "Font typer");
+		Map()->m_EditorHistory.RecordAction(std::make_shared<CEditorBrushDrawAction>(Map(), Map()->m_SelectedGroup), "Font typer");
 	m_TilesPlacedSinceActivate = 0;
 	m_Active = false;
 	m_pLastLayer = nullptr;
@@ -212,7 +213,7 @@ void CFontTyper::OnRender(CUIRect View)
 		TextModeOff();
 	str_copy(Editor()->m_aTooltip, "Type on your keyboard to insert letters and numbers. Press Escape to end text mode.");
 
-	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Editor()->Map()->SelectedLayerType(0, LAYERTYPE_TILES));
+	std::shared_ptr<CLayerTiles> pLayer = std::static_pointer_cast<CLayerTiles>(Map()->SelectedLayerType(0, LAYERTYPE_TILES));
 	if(!pLayer)
 		return;
 
@@ -238,7 +239,7 @@ void CFontTyper::OnRender(CUIRect View)
 		m_CursorRenderTime = time_get_nanoseconds();
 	if((CurTime - m_CursorRenderTime) > 500ms)
 	{
-		std::shared_ptr<CLayerGroup> pGroup = Editor()->Map()->SelectedGroup();
+		std::shared_ptr<CLayerGroup> pGroup = Map()->SelectedGroup();
 		pGroup->MapScreen();
 		Graphics()->WrapClamp();
 		Graphics()->TextureSet(m_CursorTextTexture);

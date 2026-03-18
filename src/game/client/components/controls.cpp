@@ -3,6 +3,7 @@
 #include "controls.h"
 
 #include <base/math.h>
+#include <base/time.h>
 #include <base/vmath.h>
 
 #include <engine/client.h>
@@ -536,34 +537,33 @@ bool CControls::CheckNewInput()
 		if(m_aFastInput[Dummy].m_WantedWeapon != TestInput.m_WantedWeapon)
 			NewInput[Dummy] = true;
 
-
 		bool SetMousePos = false;
 		// We need to be careful about how we manage the mouse position to avoid mispredicted hooks and fires
 		// on the first tick that they activate before we know what mouse position we actually sent to the server
-		if (Dummy == g_Config.m_ClDummy) 
+		if(Dummy == g_Config.m_ClDummy)
 		{
-			if (m_aFastInput[Dummy].m_Hook == 0 && TestInput.m_Hook == 1)
+			if(m_aFastInput[Dummy].m_Hook == 0 && TestInput.m_Hook == 1)
 			{
 				m_FastInputHookAction = true;
 				SetMousePos = true;
 			}
-			if (m_aFastInput[Dummy].m_Fire != TestInput.m_Fire && TestInput.m_Fire % 2 == 1)
+			if(m_aFastInput[Dummy].m_Fire != TestInput.m_Fire && TestInput.m_Fire % 2 == 1)
 			{
 				m_FastInputFireAction = true;
 				SetMousePos = true;
 			}
-			if (!m_FastInputHookAction && !m_FastInputFireAction)
+			if(!m_FastInputHookAction && !m_FastInputFireAction)
 			{
 				SetMousePos = true;
 			}
 		}
 
-		if (SetMousePos) 
+		if(SetMousePos)
 		{
 			TestInput.m_TargetX = (int)m_aMousePos[Dummy].x;
 			TestInput.m_TargetY = (int)m_aMousePos[Dummy].y;
 		}
-		else 
+		else
 		{
 			TestInput.m_TargetX = m_aFastInput[Dummy].m_TargetX;
 			TestInput.m_TargetY = m_aFastInput[Dummy].m_TargetY;
