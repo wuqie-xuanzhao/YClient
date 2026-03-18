@@ -77,7 +77,7 @@ public:
 	void LoadTeam(const char *pCode, int ClientId);
 	void GetSaves(int ClientId);
 
-	void CheckPoints(int ClientId, const char *pPlayerName);
+	bool CheckPoints(int ClientId, const char *pPlayerName);
 	int GetPoints(const char *pPlayerName);
 	bool IsFetchingPoints(const char *pPlayerName) const;
 };

@@ -416,12 +416,12 @@ void CScore::GetSaves(int ClientId)
 	ExecPlayerThread(CScoreWorker::GetSaves, "get saves", ClientId, "", 0);
 }
 
-void CScore::CheckPoints(int ClientId, const char *pPlayerName)
+bool CScore::CheckPoints(int ClientId, const char *pPlayerName)
 {
 	if(g_Config.m_SvMinPoints <= 0)
-		return;
+		return true;
 	if(!m_pScorePoints)
-		return;
+		return true;
 
 	bool HasOtherClientOnline = false;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -440,13 +440,17 @@ void CScore::CheckPoints(int ClientId, const char *pPlayerName)
 	}
 
 	if(HasOtherClientOnline)
-		return;
+		return true;
+
+	if(m_pScorePoints->IsFetching(pPlayerName))
+		return false;
 
 	int Points = m_pScorePoints->GetPointsForPlayer(pPlayerName);
-	if(Points == 0 && !m_pScorePoints->IsFetching(pPlayerName))
+	if(Points == 0)
 	{
 		Server()->Kick(ClientId, "You have 0 points, you are not allowed to enter this server");
 	}
+	return true;
 }
 
 int CScore::GetPoints(const char *pPlayerName)

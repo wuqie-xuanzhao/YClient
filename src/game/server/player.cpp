@@ -181,9 +181,8 @@ void CPlayer::Tick()
 
 	if(!m_PointsChecked && g_Config.m_SvMinPoints > 0)
 	{
-		if(!GameServer()->Score()->IsFetchingPoints(Server()->ClientName(m_ClientId)))
+		if(GameServer()->Score()->CheckPoints(m_ClientId, Server()->ClientName(m_ClientId)))
 		{
-			GameServer()->Score()->CheckPoints(m_ClientId, Server()->ClientName(m_ClientId));
 			m_PointsChecked = true;
 		}
 	}
