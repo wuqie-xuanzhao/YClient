@@ -4,16 +4,16 @@
 #include "score_points.h"
 #include "scoreworker.h"
 
-#include <engine/kernel.h>
 #include <game/prng.h>
 
 class CDbConnectionPool;
 class CGameContext;
 class IDbConnection;
+class IHttp;
 class IServer;
 struct ISqlData;
 
-class CScore : public IInterface
+class CScore
 {
 	CPlayerData m_aPlayerData[MAX_CLIENTS];
 	CDbConnectionPool *m_pPool;
@@ -43,7 +43,7 @@ class CScore : public IInterface
 	bool RateLimitPlayer(int ClientId);
 
 public:
-	CScore(CGameContext *pGameServer, CDbConnectionPool *pPool);
+	CScore(CGameContext *pGameServer, CDbConnectionPool *pPool, IHttp *pHttp);
 
 	CPlayerData *PlayerData(int Id) { return &m_aPlayerData[Id]; }
 

@@ -18,6 +18,7 @@
 
 #include <engine/console.h>
 #include <engine/engine.h>
+#include <engine/http.h>
 #include <engine/map.h>
 #include <engine/server/server.h>
 #include <engine/shared/config.h>
@@ -4299,7 +4300,7 @@ void CGameContext::OnInit(const void *pPersistentData)
 
 	if(!m_pScore)
 	{
-		m_pScore = new CScore(this, ((CServer *)Server())->DbPool());
+		m_pScore = new CScore(this, ((CServer *)Server())->DbPool(), Kernel()->RequestInterface<IHttp>());
 	}
 
 	// load map info from database

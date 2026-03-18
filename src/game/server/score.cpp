@@ -77,7 +77,7 @@ void CScore::GeneratePassphrase(char *pBuf, int BufSize)
 	}
 }
 
-CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool) :
+CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool, IHttp *pHttp) :
 	m_pPool(pPool),
 	m_pGameServer(pGameServer),
 	m_pServer(pGameServer->Server())
@@ -112,7 +112,6 @@ CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool) :
 		return;
 	}
 
-	IHttp *pHttp = Kernel()->RequestInterface<IHttp>();
 	m_pScorePoints = std::make_unique<CScorePoints>(pHttp);
 }
 
