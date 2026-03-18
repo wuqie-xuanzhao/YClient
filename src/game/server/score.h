@@ -1,7 +1,6 @@
 #ifndef GAME_SERVER_SCORE_H
 #define GAME_SERVER_SCORE_H
 
-#include "score_points.h"
 #include "scoreworker.h"
 
 #include <game/prng.h>
@@ -9,7 +8,6 @@
 class CDbConnectionPool;
 class CGameContext;
 class IDbConnection;
-class IHttp;
 class IServer;
 struct ISqlData;
 
@@ -27,8 +25,6 @@ class CScore
 	CPrng m_Prng;
 	void GeneratePassphrase(char *pBuf, int BufSize);
 
-	std::unique_ptr<CScorePoints> m_pScorePoints;
-
 	// returns new SqlResult bound to the player, if no current Thread is active for this player
 	std::shared_ptr<CScorePlayerResult> NewSqlPlayerResult(int ClientId);
 	// Creates for player database requests
@@ -43,7 +39,7 @@ class CScore
 	bool RateLimitPlayer(int ClientId);
 
 public:
-	CScore(CGameContext *pGameServer, CDbConnectionPool *pPool, IHttp *pHttp);
+	CScore(CGameContext *pGameServer, CDbConnectionPool *pPool);
 
 	CPlayerData *PlayerData(int Id) { return &m_aPlayerData[Id]; }
 
@@ -76,10 +72,6 @@ public:
 	void SaveTeam(int ClientId, const char *pCode, const char *pServer);
 	void LoadTeam(const char *pCode, int ClientId);
 	void GetSaves(int ClientId);
-
-	bool CheckPoints(int ClientId, const char *pPlayerName);
-	int GetPoints(const char *pPlayerName);
-	bool IsFetchingPoints(const char *pPlayerName) const;
 };
 
 #endif // GAME_SERVER_SCORE_H

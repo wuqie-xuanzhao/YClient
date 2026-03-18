@@ -30,11 +30,6 @@ CPlayer::CPlayer(CGameContext *pGameServer, uint32_t UniqueClientId, int ClientI
 	m_NumInputs = 0;
 	Reset();
 	GameServer()->Antibot()->OnPlayerInit(m_ClientId);
-
-	if(g_Config.m_SvMinPoints > 0)
-	{
-		GameServer()->Score()->GetPoints(Server()->ClientName(m_ClientId));
-	}
 }
 
 CPlayer::~CPlayer()
@@ -90,7 +85,6 @@ void CPlayer::Reset()
 	m_TuneZoneOld = m_TuneZone;
 	m_Halloween = false;
 	m_FirstPacket = true;
-	m_PointsChecked = false;
 
 	m_SendVoteIndex = -1;
 
@@ -183,14 +177,6 @@ void CPlayer::Tick()
 
 	if(!Server()->ClientIngame(m_ClientId))
 		return;
-
-	if(!m_PointsChecked && g_Config.m_SvMinPoints > 0)
-	{
-		if(GameServer()->Score()->CheckPoints(m_ClientId, Server()->ClientName(m_ClientId)))
-		{
-			m_PointsChecked = true;
-		}
-	}
 
 	if(m_ChatScore > 0)
 		m_ChatScore--;

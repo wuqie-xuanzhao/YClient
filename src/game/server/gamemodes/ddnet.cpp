@@ -61,20 +61,20 @@ void CGameControllerDDNet::HandleCharacterTiles(CCharacter *pChr, int MapIndex)
 		const int Team = GameServer()->GetDDRaceTeam(ClientId);
 		if(Teams().GetSaving(Team))
 		{
-			GameServer()->SendStartWarning(ClientId, "保存和加载正在进行中，你不能开始游戏。");
+			GameServer()->SendStartWarning(ClientId, "保存和加载进行中，不能开始游戏");
 			pChr->Die(ClientId, WEAPON_WORLD);
 			return;
 		}
 		if(g_Config.m_SvTeam == SV_TEAM_MANDATORY && (Team == TEAM_FLOCK || Teams().Count(Team) <= 1))
 		{
-			GameServer()->SendStartWarning(ClientId, "需要和别人组队才能开始游戏。");
+			GameServer()->SendStartWarning(ClientId, "需要和其他玩家组队才能开始游戏");
 			pChr->Die(ClientId, WEAPON_WORLD);
 			return;
 		}
 		if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team != TEAM_FLOCK && Teams().IsValidTeamNumber(Team) && Teams().Count(Team) < g_Config.m_SvMinTeamSize && !Teams().TeamFlock(Team))
 		{
 			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "队伍少于 %d 个玩家，队伍将不计入排名。", g_Config.m_SvMinTeamSize);
+			str_format(aBuf, sizeof(aBuf), "队伍少于 %d 个玩家，将不计入排名", g_Config.m_SvMinTeamSize);
 			GameServer()->SendStartWarning(ClientId, aBuf);
 		}
 		if(g_Config.m_SvResetPickups)
@@ -99,18 +99,18 @@ void CGameControllerDDNet::HandleCharacterTiles(CCharacter *pChr, int MapIndex)
 	else if(((TileIndex == TILE_UNLOCK_TEAM) || (TileFIndex == TILE_UNLOCK_TEAM)) && Teams().TeamLocked(GameServer()->GetDDRaceTeam(ClientId)))
 	{
 		Teams().SetTeamLock(GameServer()->GetDDRaceTeam(ClientId), false);
-		GameServer()->SendChatTeam(GameServer()->GetDDRaceTeam(ClientId), "队伍被解锁方块解锁了。");
+		GameServer()->SendChatTeam(GameServer()->GetDDRaceTeam(ClientId), "队伍被解锁方块解锁了");
 	}
 
 	// solo part
 	if(((TileIndex == TILE_SOLO_ENABLE) || (TileFIndex == TILE_SOLO_ENABLE)) && !Teams().m_Core.GetSolo(ClientId))
 	{
-		GameServer()->SendChatTarget(ClientId, "现处于 solo 单人模式");
+		GameServer()->SendChatTarget(ClientId, "进入 solo 单人区域");
 		pChr->SetSolo(true);
 	}
 	else if(((TileIndex == TILE_SOLO_DISABLE) || (TileFIndex == TILE_SOLO_DISABLE)) && Teams().m_Core.GetSolo(ClientId))
 	{
-		GameServer()->SendChatTarget(ClientId, "从 solo 单人模式出来了。");
+		GameServer()->SendChatTarget(ClientId, "退出 solo 单人区域");
 		pChr->SetSolo(false);
 	}
 }
@@ -204,8 +204,8 @@ void CGameControllerDDNet::OnPlayerConnect(CPlayer *pPlayer)
 		str_format(aBuf, sizeof(aBuf), "'%s' 进入了游戏", Server()->ClientName(ClientId), GetTeamName(pPlayer->GetTeam()));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf, -1, CGameContext::FLAG_SIX);
 
-		GameServer()->SendChatTarget(ClientId, "DDraceNetwork 模组。版本号：" GAME_VERSION);
-		GameServer()->SendChatTarget(ClientId, "请访问网站 DDNet.org 或在聊天框中输入 /info ，并请输入 /rules阅读规则。");
+		GameServer()->SendChatTarget(ClientId, "DDraceNetwork 版本：" GAME_VERSION);
+		GameServer()->SendChatTarget(ClientId, "官方网站: DDNet.org，聊天框输入 /info 和 /rules 了解服务器信息和规则");
 	}
 }
 
@@ -217,7 +217,7 @@ void CGameControllerDDNet::OnPlayerDisconnect(CPlayer *pPlayer, const char *pRea
 	IGameController::OnPlayerDisconnect(pPlayer, pReason);
 
 	if(!GameServer()->PlayerModerating() && WasModerator)
-		GameServer()->SendChat(-1, TEAM_ALL, "服务器的 kick/spec 指令投票关闭了。");
+		GameServer()->SendChat(-1, TEAM_ALL, "服务器的 kick/spec 指令投票不可用");
 
 	if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO)
 		Teams().SetForceCharacterTeam(ClientId, TEAM_FLOCK);

@@ -147,8 +147,6 @@ private:
 	int m_OverrideEmoteReset;
 	bool m_Halloween;
 
-	bool m_PointsChecked;
-
 public:
 	enum
 	{

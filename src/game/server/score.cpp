@@ -6,8 +6,6 @@
 
 #include <base/system.h>
 
-#include <engine/http.h>
-#include <engine/kernel.h>
 #include <engine/server.h>
 #include <engine/server/databases/connection_pool.h>
 #include <engine/shared/config.h>
@@ -77,7 +75,7 @@ void CScore::GeneratePassphrase(char *pBuf, int BufSize)
 	}
 }
 
-CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool, IHttp *pHttp) :
+CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool) :
 	m_pPool(pPool),
 	m_pGameServer(pGameServer),
 	m_pServer(pGameServer->Server())
@@ -111,8 +109,6 @@ CScore::CScore(CGameContext *pGameServer, CDbConnectionPool *pPool, IHttp *pHttp
 		Server()->SetErrorShutdown("sql too few words in wordlist");
 		return;
 	}
-
-	m_pScorePoints = std::make_unique<CScorePoints>(pHttp);
 }
 
 void CScore::LoadBestTime()
@@ -414,55 +410,4 @@ void CScore::GetSaves(int ClientId)
 	if(RateLimitPlayer(ClientId))
 		return;
 	ExecPlayerThread(CScoreWorker::GetSaves, "get saves", ClientId, "", 0);
-}
-
-bool CScore::CheckPoints(int ClientId, const char *pPlayerName)
-{
-	if(g_Config.m_SvMinPoints <= 0)
-		return true;
-	if(!m_pScorePoints)
-		return true;
-
-	bool HasOtherClientOnline = false;
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(i == ClientId)
-			continue;
-		if(!Server()->ClientIngame(i))
-			continue;
-		const NETADDR *pAddr = Server()->ClientAddr(i);
-		const NETADDR *pMyAddr = Server()->ClientAddr(ClientId);
-		if(pAddr && pMyAddr && mem_comp(pAddr, pMyAddr, sizeof(NETADDR)) == 0)
-		{
-			HasOtherClientOnline = true;
-			break;
-		}
-	}
-
-	if(HasOtherClientOnline)
-		return true;
-
-	if(m_pScorePoints->IsFetching(pPlayerName))
-		return false;
-
-	int Points = m_pScorePoints->GetPointsForPlayer(pPlayerName);
-	if(Points == 0)
-	{
-		Server()->Kick(ClientId, "You have 0 points, you are not allowed to enter this server\n 你没有获得过任何分数, 禁止加入服务器");
-	}
-	return true;
-}
-
-int CScore::GetPoints(const char *pPlayerName)
-{
-	if(!m_pScorePoints)
-		return 0;
-	return m_pScorePoints->GetPointsForPlayer(pPlayerName);
-}
-
-bool CScore::IsFetchingPoints(const char *pPlayerName) const
-{
-	if(!m_pScorePoints)
-		return false;
-	return m_pScorePoints->IsFetching(pPlayerName);
 }

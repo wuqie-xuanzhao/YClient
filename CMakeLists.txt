@@ -3048,8 +3048,6 @@ if(SERVER)
     save.h
     score.cpp
     score.h
-    score_points.cpp
-    score_points.h
     scoreworker.cpp
     scoreworker.h
     teams.cpp
