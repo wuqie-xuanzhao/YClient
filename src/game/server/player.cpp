@@ -30,6 +30,11 @@ CPlayer::CPlayer(CGameContext *pGameServer, uint32_t UniqueClientId, int ClientI
 	m_NumInputs = 0;
 	Reset();
 	GameServer()->Antibot()->OnPlayerInit(m_ClientId);
+
+	if(g_Config.m_SvMinPoints > 0)
+	{
+		GameServer()->Score()->GetPoints(Server()->ClientName(m_ClientId));
+	}
 }
 
 CPlayer::~CPlayer()
