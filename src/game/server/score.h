@@ -4,6 +4,7 @@
 #include "score_points.h"
 #include "scoreworker.h"
 
+#include <engine/kernel.h>
 #include <game/prng.h>
 
 class CDbConnectionPool;
@@ -12,7 +13,7 @@ class IDbConnection;
 class IServer;
 struct ISqlData;
 
-class CScore
+class CScore : public IInterface
 {
 	CPlayerData m_aPlayerData[MAX_CLIENTS];
 	CDbConnectionPool *m_pPool;
