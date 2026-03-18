@@ -190,6 +190,14 @@ void CGameControllerDDNet::OnPlayerConnect(CPlayer *pPlayer)
 	// LoadScoreThreaded() instead
 	Score()->LoadPlayerData(ClientId);
 
+	if(g_Config.m_SvMinPoints > 0)
+	{
+		if(!Score()->IsFetchingPoints(Server()->ClientName(ClientId)))
+		{
+			Score()->CheckPoints(ClientId, Server()->ClientName(ClientId));
+		}
+	}
+
 	if(!Server()->ClientPrevIngame(ClientId))
 	{
 		char aBuf[512];

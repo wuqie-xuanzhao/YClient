@@ -448,7 +448,7 @@ bool CScore::CheckPoints(int ClientId, const char *pPlayerName)
 	int Points = m_pScorePoints->GetPointsForPlayer(pPlayerName);
 	if(Points == 0)
 	{
-		Server()->Kick(ClientId, "You have 0 points, you are not allowed to enter this server");
+		Server()->Kick(ClientId, "You have 0 points, you are not allowed to enter this server\n 你没有获得过任何分数, 禁止加入服务器");
 	}
 	return true;
 }
