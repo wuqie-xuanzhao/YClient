@@ -7,6 +7,7 @@
 #include <base/system.h>
 
 #include <engine/http.h>
+#include <engine/kernel.h>
 #include <engine/server.h>
 #include <engine/server/databases/connection_pool.h>
 #include <engine/shared/config.h>
